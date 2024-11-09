@@ -95,3 +95,4 @@ export default function CategoryChart({ subscriptions }: CategoryChartProps) {
       <Bar data={data} options={options as any} />
     </div>
   );
+}

@@ -8,6 +8,8 @@ import { StatsCards } from "@/components/dashboard/stats-cards";
 import { SubscriptionDialog } from "@/components/dashboard/subscription-dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
+import DarkModeToggle from '@/components/DarkModeToggle';
+import CategoryChart from '@/components/CategoryChart';
 
 interface Subscription {
   id: number;
@@ -161,64 +163,77 @@ export default function DashboardPage() {
   const activeSubscriptions = subscriptions.length;
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Your Subscriptions</h1>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-2">
-            <Button
-              variant={sortBy === 'name' ? 'default' : 'outline'}
-              onClick={() => handleSortChange('name')}
-            >
-              Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-            </Button>
-            <Button
-              variant={sortBy === 'price' ? 'default' : 'outline'}
-              onClick={() => handleSortChange('price')}
-            >
-              Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <div className="container mx-auto px-4 py-16">
+        <header className="flex justify-between items-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+            Subtrackt Dashboard
+          </h1>
+          <DarkModeToggle />
+        </header>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold">Your Subscriptions</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2">
+              <Button
+                variant={sortBy === 'name' ? 'default' : 'outline'}
+                onClick={() => handleSortChange('name')}
+              >
+                Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </Button>
+              <Button
+                variant={sortBy === 'price' ? 'default' : 'outline'}
+                onClick={() => handleSortChange('price')}
+              >
+                Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </Button>
+            </div>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
             </Button>
           </div>
-          <Button variant="outline" onClick={handleLogout}>
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
         </div>
-      </div>
 
-      <StatsCards
-        totalMonthly={totalMonthly}
-        activeSubscriptions={activeSubscriptions}
-        subscriptions={subscriptions}
-      />
+        <StatsCards
+          totalMonthly={totalMonthly}
+          activeSubscriptions={activeSubscriptions}
+          subscriptions={subscriptions}
+        />
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {sortedSubscriptions.map((subscription) => (
-          <SubscriptionCard
-            key={subscription.id}
-            subscription={subscription}
-            onEdit={() => {
-              setSelectedSubscription(subscription);
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {sortedSubscriptions.map((subscription) => (
+            <SubscriptionCard
+              key={subscription.id}
+              subscription={subscription}
+              onEdit={() => {
+                setSelectedSubscription(subscription);
+                setDialogOpen(true);
+              }}
+              onToggleReminder={handleToggleReminder}
+            />
+          ))}
+          <AddSubscriptionButton
+            onClick={() => {
+              setSelectedSubscription(undefined);
               setDialogOpen(true);
             }}
-            onToggleReminder={handleToggleReminder}
           />
-        ))}
-        <AddSubscriptionButton
-          onClick={() => {
-            setSelectedSubscription(undefined);
-            setDialogOpen(true);
-          }}
-        />
-      </div>
+        </div>
 
-      <SubscriptionDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSave={handleSave}
-        onDelete={handleDelete}
-        subscription={selectedSubscription}
-      />
+        <SubscriptionDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onSave={handleSave}
+          onDelete={handleDelete}
+          subscription={selectedSubscription}
+        />
+
+        {/* Add the CategoryChart below the subscriptions */}
+        <div className="mt-12">
+          <CategoryChart subscriptions={subscriptions} />
+        </div>
+      </div>
     </div>
   );
 }

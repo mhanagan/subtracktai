@@ -1,4 +1,3 @@
-import { Handler, schedule } from "@netlify/functions";
 import { sendSubscriptionReminder } from '../../lib/email';
 
 interface Subscription {
@@ -11,7 +10,7 @@ interface Subscription {
   userEmail: string;
 }
 
-const handler: Handler = async (event, context) => {
+export default async function handler(req, res) {
   try {
     // In a real application, fetch subscriptions from your database
     const subscriptions: Subscription[] = []; // This would be your database query
@@ -60,27 +59,18 @@ const handler: Handler = async (event, context) => {
       }
     }
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify({
-        success: true,
-        remindersSent,
-        errors: errors.length > 0 ? errors : undefined,
-        timestamp: new Date().toISOString()
-      })
-    };
+    res.status(200).json({
+      success: true,
+      remindersSent,
+      errors: errors.length > 0 ? errors : undefined,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     console.error('Error in renewal check:', error);
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ 
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date().toISOString()
-      })
-    };
+    res.status(500).json({ 
+      success: false,
+      error: 'Internal server error',
+      timestamp: new Date().toISOString()
+    });
   }
-};
-
-// Schedule the function to run daily at midnight
-export const handler = schedule("0 0 * * *", handler);
+}

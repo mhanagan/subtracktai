@@ -57,7 +57,7 @@ export default function CategoryChart({ subscriptions }: CategoryChartProps) {
       },
       tooltip: {
         callbacks: {
-          label: function(context) {
+          label: function(context: any) {
             let label = context.dataset.label || '';
             if (label) {
               label += ': ';
@@ -82,7 +82,7 @@ export default function CategoryChart({ subscriptions }: CategoryChartProps) {
           display: false,
         },
         ticks: {
-          callback: function(value) {
+          callback: function(value: number) {
             return `$${value}`;
           }
         }
@@ -92,7 +92,6 @@ export default function CategoryChart({ subscriptions }: CategoryChartProps) {
 
   return (
     <div style={{ height: '300px', maxWidth: '600px', margin: '0 auto' }}>
-      <Bar data={data} options={options} />
+      <Bar data={data} options={options as any} />
     </div>
   );
-} 

@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import DarkModeToggle from '@/components/DarkModeToggle';
 import CategoryChart from '@/components/CategoryChart';
 
-interface Subscription {
+export interface Subscription {
   id: number;
   name: string;
   category: string;

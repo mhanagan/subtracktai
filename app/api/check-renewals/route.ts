@@ -2,9 +2,6 @@ import { sendSubscriptionReminder } from '@/lib/email';
 import { NextResponse } from 'next/server';
 import { Pool } from 'pg';
 
-export const runtime = 'edge';
-export const maxDuration = 300; // 5 minutes maximum execution time
-
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
 });

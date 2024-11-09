@@ -3,13 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, CreditCard, Bell } from "lucide-react";
 import { formatDate } from "@/lib/utils";
-
-interface Subscription {
-  id: number;
-  name: string;
-  price: number;
-  renewalDate: string;
-}
+import { Subscription } from '@/types/subscription';
 
 interface StatsCardsProps {
   totalMonthly: number;
@@ -23,9 +17,9 @@ function getUpcomingRenewals(subscriptions: Subscription[]): Subscription[] {
   sevenDaysFromNow.setDate(today.getDate() + 7);
 
   return subscriptions.filter(sub => {
-    const renewalDate = new Date(sub.renewalDate);
+    const renewalDate = new Date(sub.renewal_date);
     return renewalDate >= today && renewalDate <= sevenDaysFromNow;
-  }).sort((a, b) => new Date(a.renewalDate).getTime() - new Date(b.renewalDate).getTime());
+  }).sort((a, b) => new Date(a.renewal_date).getTime() - new Date(b.renewal_date).getTime());
 }
 
 export function StatsCards({
@@ -75,7 +69,7 @@ export function StatsCards({
                   {upcomingRenewals.map(sub => (
                     <div key={sub.id} className="text-sm flex justify-between items-center">
                       <span className="font-medium">{sub.name}</span>
-                      <span className="text-muted-foreground">{formatDate(sub.renewalDate)}</span>
+                      <span className="text-muted-foreground">{formatDate(sub.renewal_date)}</span>
                     </div>
                   ))}
                 </div>

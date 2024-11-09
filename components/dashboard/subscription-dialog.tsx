@@ -20,15 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-interface Subscription {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  renewalDate: string;
-  reminderEnabled: boolean;
-}
+import { Subscription } from '@/types/subscription';  // Update import to use shared type
 
 interface SubscriptionDialogProps {
   open: boolean;
@@ -42,8 +34,8 @@ const defaultSubscription = {
   name: "",
   category: "",
   price: "",
-  renewalDate: "",
-  reminderEnabled: false,
+  renewal_date: "",
+  reminder_enabled: false,
 };
 
 export function SubscriptionDialog({
@@ -66,8 +58,8 @@ export function SubscriptionDialog({
         setName(subscription.name);
         setCategory(subscription.category);
         setPrice(subscription.price.toString());
-        setRenewalDate(subscription.renewalDate);
-        setReminderEnabled(subscription.reminderEnabled);
+        setRenewalDate(subscription.renewal_date);
+        setReminderEnabled(subscription.reminder_enabled);
       } else {
         // Adding new subscription
         setName("");
@@ -85,8 +77,8 @@ export function SubscriptionDialog({
       name,
       category,
       price: parseFloat(price),
-      renewalDate,
-      reminderEnabled,
+      renewal_date: renewalDate,
+      reminder_enabled: reminderEnabled,
     };
     onSave(subscriptionData);
   };

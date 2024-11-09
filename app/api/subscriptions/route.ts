@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         name,
         category,
         price::float,
-        renewal_date::text,
+        TO_CHAR(renewal_date, 'YYYY-MM-DD') as renewal_date,
         reminder_enabled,
         user_email
       FROM subscriptions 
@@ -50,9 +50,14 @@ export async function POST(request: Request) {
       userEmail
     });
 
+    // Validate required fields
     if (!name || !category || !price || !renewalDate || !userEmail) {
+      console.error('Missing required fields:', { name, category, price, renewalDate, userEmail });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
+
+    // Ensure the date is in the correct format (YYYY-MM-DD)
+    const formattedDate = renewalDate.split('T')[0];
 
     const { rows } = await sql`
       INSERT INTO subscriptions (
@@ -66,7 +71,7 @@ export async function POST(request: Request) {
         ${name},
         ${category},
         ${price}::decimal,
-        ${renewalDate}::date,
+        ${formattedDate}::date,
         ${reminderEnabled},
         ${userEmail}
       )
@@ -75,7 +80,7 @@ export async function POST(request: Request) {
         name,
         category,
         price::float,
-        renewal_date::text,
+        TO_CHAR(renewal_date, 'YYYY-MM-DD') as renewal_date,
         reminder_enabled,
         user_email
     `;
@@ -116,7 +121,7 @@ export async function PUT(request: Request) {
         name,
         category,
         price::float,
-        renewal_date::text,
+        TO_CHAR(renewal_date, 'YYYY-MM-DD') as renewal_date,
         reminder_enabled,
         user_email
     `;

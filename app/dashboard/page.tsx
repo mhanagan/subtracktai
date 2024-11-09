@@ -11,15 +11,7 @@ import { useRouter } from "next/navigation";
 import DarkModeToggle from '@/components/DarkModeToggle';
 import CategoryChart from '@/components/CategoryChart';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-
-export interface Subscription {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  renewalDate: string;
-  reminderEnabled: boolean;
-}
+import { Subscription } from '@/types/subscription';
 
 function AddSubscriptionButton({ onClick }: { onClick: () => void }) {
   return (
@@ -120,17 +112,27 @@ export default function DashboardPage() {
 
     try {
       const method = selectedSubscription ? 'PUT' : 'POST';
+      
+      // Format the subscription data to match the API expectations
+      const formattedSubscription = {
+        id: subscription.id,
+        name: subscription.name,
+        category: subscription.category,
+        price: subscription.price,
+        renewalDate: subscription.renewal_date,
+        reminderEnabled: subscription.reminder_enabled,
+        userEmail
+      };
+
+      console.log('Sending subscription data:', formattedSubscription);
+
       const response = await fetch('/api/subscriptions', {
         method,
         headers: {
           'Content-Type': 'application/json',
           'user-email': userEmail
         },
-        body: JSON.stringify({
-          ...subscription,
-          userEmail,
-          renewalDate: new Date(subscription.renewalDate).toISOString().split('T')[0]
-        })
+        body: JSON.stringify(formattedSubscription)
       });
 
       if (!response.ok) {
@@ -192,13 +194,13 @@ export default function DashboardPage() {
 
     const updatedSubscriptions = subscriptions.map((sub) =>
       sub.id === subscription.id
-        ? { ...sub, reminderEnabled: !sub.reminderEnabled }
+        ? { ...sub, reminder_enabled: !sub.reminder_enabled }
         : sub
     );
     setSubscriptions(updatedSubscriptions);
     toast({
-      title: subscription.reminderEnabled ? "Reminder disabled" : "Reminder enabled",
-      description: subscription.reminderEnabled
+      title: subscription.reminder_enabled ? "Reminder disabled" : "Reminder enabled",
+      description: subscription.reminder_enabled
         ? `Reminders turned off for ${subscription.name}`
         : `You will be notified one day before ${subscription.name} renews`,
     });

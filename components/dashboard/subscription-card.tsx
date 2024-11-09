@@ -4,15 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar, CreditCard, Edit2, Bell, BellOff } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
-
-interface Subscription {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  renewalDate: string;
-  reminderEnabled: boolean;
-}
+import { Subscription } from '@/types/subscription';
 
 interface SubscriptionCardProps {
   subscription: Subscription;
@@ -23,15 +15,15 @@ interface SubscriptionCardProps {
 export function SubscriptionCard({ subscription, onEdit, onToggleReminder }: SubscriptionCardProps) {
   const { toast } = useToast();
   const daysUntilRenewal = Math.ceil(
-    (new Date(subscription.renewalDate).getTime() - new Date().getTime()) /
+    (new Date(subscription.renewal_date).getTime() - new Date().getTime()) /
       (1000 * 60 * 60 * 24)
   );
 
   const handleToggleReminder = () => {
     onToggleReminder(subscription);
     toast({
-      title: subscription.reminderEnabled ? "Reminder disabled" : "Reminder enabled",
-      description: subscription.reminderEnabled
+      title: subscription.reminder_enabled ? "Reminder disabled" : "Reminder enabled",
+      description: subscription.reminder_enabled
         ? `Reminders turned off for ${subscription.name}`
         : `You will be notified one day before ${subscription.name} renews`,
     });
@@ -48,7 +40,7 @@ export function SubscriptionCard({ subscription, onEdit, onToggleReminder }: Sub
             onClick={handleToggleReminder}
             className="hover:text-primary"
           >
-            {subscription.reminderEnabled ? (
+            {subscription.reminder_enabled ? (
               <Bell className="h-4 w-4 text-primary" />
             ) : (
               <BellOff className="h-4 w-4 text-muted-foreground" />
@@ -80,7 +72,7 @@ export function SubscriptionCard({ subscription, onEdit, onToggleReminder }: Sub
               Next Renewal
             </span>
             <span className="font-medium">
-              {new Date(subscription.renewalDate).toLocaleDateString()}
+              {new Date(subscription.renewal_date).toLocaleDateString()}
               {daysUntilRenewal <= 7 && (
                 <span className="ml-2 text-xs text-red-500">
                   ({daysUntilRenewal} days)

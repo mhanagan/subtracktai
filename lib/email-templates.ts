@@ -27,8 +27,8 @@ export const emailTemplates = {
       </div>
 
       <div style="text-align: center; color: #666; font-size: 14px;">
-        <p>To manage your subscription, log in to your SubTracker account.</p>
-        <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTracker. All rights reserved.</p>
+        <p>To manage your subscription, log in to your SubTrackt account.</p>
+        <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTrackt. All rights reserved.</p>
       </div>
     </div>
   `,
@@ -37,7 +37,7 @@ export const emailTemplates = {
     <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
       <div style="text-align: center; margin-bottom: 32px;">
         <h1 style="color: #1a1a1a; margin-bottom: 8px;">Reset Your Password</h1>
-        <p style="color: #666; font-size: 16px;">You requested to reset your SubTracker password</p>
+        <p style="color: #666; font-size: 16px;">You requested to reset your SubTrackt password</p>
       </div>
 
       <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
@@ -58,7 +58,7 @@ export const emailTemplates = {
 
       <div style="text-align: center; color: #666; font-size: 14px;">
         <p>If you didn't request this, please ignore this email or contact support if you have concerns.</p>
-        <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTracker. All rights reserved.</p>
+        <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTrackt. All rights reserved.</p>
       </div>
     </div>
   `,
@@ -66,13 +66,13 @@ export const emailTemplates = {
   welcome: (name: string) => `
     <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
       <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="color: #1a1a1a; margin-bottom: 8px;">Welcome to SubTracker!</h1>
+        <h1 style="color: #1a1a1a; margin-bottom: 8px;">Welcome to SubTrackt!</h1>
         <p style="color: #666; font-size: 16px;">Thanks for joining us, ${name}</p>
       </div>
 
       <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
         <p style="margin-bottom: 16px; line-height: 1.5;">
-          We're excited to help you keep track of all your subscriptions in one place. With SubTracker, you'll never miss a payment or renewal again.
+          We're excited to help you keep track of all your subscriptions in one place. With SubTrackt, you'll never miss a payment or renewal again.
         </p>
         
         <p style="margin-bottom: 16px; line-height: 1.5;">
@@ -87,7 +87,7 @@ export const emailTemplates = {
         </ul>
 
         <div style="text-align: center;">
-          <a href="${process.env.NEXT_PUBLIC_SITE_URL}/dashboard" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+          <a href="${process.env.NEXT_PUBLIC_SITE_URL}" style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
             Get Started
           </a>
         </div>
@@ -95,7 +95,7 @@ export const emailTemplates = {
 
       <div style="text-align: center; color: #666; font-size: 14px;">
         <p>Need help? Just reply to this email and we'll be happy to assist you.</p>
-        <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTracker. All rights reserved.</p>
+        <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTrackt. All rights reserved.</p>
       </div>
     </div>
   `

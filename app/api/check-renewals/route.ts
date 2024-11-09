@@ -1,20 +1,21 @@
 import { sendSubscriptionReminder } from '@/lib/email';
 import { NextResponse } from 'next/server';
-import { Pool } from 'pg';
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { sql } from '@vercel/postgres';
+import { QueryResultRow } from '@vercel/postgres';
 
 interface Subscription {
   id: number;
   name: string;
   category: string;
   price: number;
-  renewalDate: string;
-  reminderEnabled: boolean;
-  userEmail: string;
+  renewal_date: string;
+  reminder_enabled: boolean;
+  user_email: string;
 }
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
@@ -23,10 +24,17 @@ export async function GET(request: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const client = await pool.connect();
-    const result = await client.query('SELECT * FROM subscriptions');
-    const subscriptions: Subscription[] = result.rows;
-    client.release();
+    const { rows } = await sql`SELECT * FROM subscriptions`;
+    // Cast the rows to match the Subscription interface
+    const subscriptions: Subscription[] = rows.map(row => ({
+      id: row.id,
+      name: row.name,
+      category: row.category,
+      price: row.price,
+      renewal_date: row.renewal_date,
+      reminder_enabled: row.reminder_enabled,
+      user_email: row.user_email
+    }));
 
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -36,24 +44,24 @@ export async function GET(request: Request) {
     const errors = [];
 
     for (const subscription of subscriptions) {
-      const renewalDate = new Date(subscription.renewalDate);
+      const renewalDate = new Date(subscription.renewal_date);
       renewalDate.setHours(0, 0, 0, 0);
 
       if (
         renewalDate.getTime() === tomorrow.getTime() &&
-        subscription.reminderEnabled
+        subscription.reminder_enabled
       ) {
         try {
           const result = await sendSubscriptionReminder(
             subscription,
-            subscription.userEmail
+            subscription.user_email
           );
 
           if (result.success) {
             remindersSent.push({
               id: subscription.id,
               name: subscription.name,
-              email: subscription.userEmail
+              email: subscription.user_email
             });
           } else {
             errors.push({

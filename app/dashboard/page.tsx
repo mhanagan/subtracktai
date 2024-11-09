@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import DarkModeToggle from '@/components/DarkModeToggle';
 import CategoryChart from '@/components/CategoryChart';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export interface Subscription {
   id: number;
@@ -42,22 +43,42 @@ export default function DashboardPage() {
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
 
-  // Load subscriptions from localStorage on initial render
+  // Load subscriptions from the database
   useEffect(() => {
-    // Get current user's email from localStorage
     const userEmail = localStorage.getItem('userEmail');
     if (!userEmail) {
-      // If no user is logged in, redirect to login
       router.push('/auth/login');
       return;
     }
 
-    // Use user-specific key for storing subscriptions
-    const savedSubscriptions = localStorage.getItem(`subscriptions_${userEmail}`);
-    if (savedSubscriptions) {
-      setSubscriptions(JSON.parse(savedSubscriptions));
+    async function fetchSubscriptions() {
+      try {
+        const response = await fetch('/api/subscriptions', {
+          headers: {
+            'user-email': userEmail || '',
+            'Content-Type': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch subscriptions');
+        }
+
+        const data = await response.json();
+        console.log('Fetched subscriptions:', data);
+        setSubscriptions(data);
+      } catch (error) {
+        console.error('Error fetching subscriptions:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load subscriptions",
+          variant: "destructive",
+        });
+      }
     }
-  }, [router]);
+
+    fetchSubscriptions();
+  }, [router, toast]);
 
   const handleLogout = () => {
     // Clear user-specific data
@@ -90,33 +111,59 @@ export default function DashboardPage() {
     }
   };
 
-  const handleSave = (subscription: Subscription) => {
+  const handleSave = async (subscription: Subscription) => {
     const userEmail = localStorage.getItem('userEmail');
     if (!userEmail) {
       router.push('/auth/login');
       return;
     }
 
-    let updatedSubscriptions: Subscription[];
-    if (selectedSubscription) {
-      updatedSubscriptions = subscriptions.map((sub) =>
-        sub.id === selectedSubscription.id ? subscription : sub
-      );
-      toast({
-        title: "Subscription updated",
-        description: `${subscription.name} has been updated successfully.`,
+    try {
+      const method = selectedSubscription ? 'PUT' : 'POST';
+      const response = await fetch('/api/subscriptions', {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+          'user-email': userEmail
+        },
+        body: JSON.stringify({
+          ...subscription,
+          userEmail,
+          renewalDate: new Date(subscription.renewalDate).toISOString().split('T')[0]
+        })
       });
-    } else {
-      const newId = Math.max(0, ...subscriptions.map(s => s.id)) + 1;
-      updatedSubscriptions = [...subscriptions, { ...subscription, id: newId }];
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to save subscription');
+      }
+
+      const savedSubscription = await response.json();
+      console.log('Saved subscription:', savedSubscription);
+
+      let updatedSubscriptions: Subscription[];
+      if (selectedSubscription) {
+        updatedSubscriptions = subscriptions.map((sub) =>
+          sub.id === selectedSubscription.id ? savedSubscription : sub
+        );
+      } else {
+        updatedSubscriptions = [...subscriptions, savedSubscription];
+      }
+
+      setSubscriptions(updatedSubscriptions);
+      setDialogOpen(false);
       toast({
-        title: "Subscription added",
-        description: `${subscription.name} has been added successfully.`,
+        title: selectedSubscription ? "Subscription updated" : "Subscription added",
+        description: `${subscription.name} has been ${selectedSubscription ? 'updated' : 'added'} successfully.`,
+      });
+    } catch (error) {
+      console.error('Error saving subscription:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to save subscription",
+        variant: "destructive",
       });
     }
-    setSubscriptions(updatedSubscriptions);
-    localStorage.setItem(`subscriptions_${userEmail}`, JSON.stringify(updatedSubscriptions));
-    setDialogOpen(false);
   };
 
   const handleDelete = (subscription: Subscription) => {
@@ -128,7 +175,6 @@ export default function DashboardPage() {
 
     const updatedSubscriptions = subscriptions.filter((sub) => sub.id !== subscription.id);
     setSubscriptions(updatedSubscriptions);
-    localStorage.setItem(`subscriptions_${userEmail}`, JSON.stringify(updatedSubscriptions));
     setDialogOpen(false);
     toast({
       title: "Subscription deleted",
@@ -150,7 +196,6 @@ export default function DashboardPage() {
         : sub
     );
     setSubscriptions(updatedSubscriptions);
-    localStorage.setItem(`subscriptions_${userEmail}`, JSON.stringify(updatedSubscriptions));
     toast({
       title: subscription.reminderEnabled ? "Reminder disabled" : "Reminder enabled",
       description: subscription.reminderEnabled
@@ -163,77 +208,79 @@ export default function DashboardPage() {
   const activeSubscriptions = subscriptions.length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <div className="container mx-auto px-4 py-16">
-        <header className="flex justify-between items-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
-            Subtrackt Dashboard
-          </h1>
-          <DarkModeToggle />
-        </header>
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Your Subscriptions</h1>
-          <div className="flex items-center gap-4">
-            <div className="flex gap-2">
-              <Button
-                variant={sortBy === 'name' ? 'default' : 'outline'}
-                onClick={() => handleSortChange('name')}
-              >
-                Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-              </Button>
-              <Button
-                variant={sortBy === 'price' ? 'default' : 'outline'}
-                onClick={() => handleSortChange('price')}
-              >
-                Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <div className="container mx-auto px-4 py-16">
+          <header className="flex justify-between items-center mb-16">
+            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+              Subtrackt Dashboard
+            </h1>
+            <DarkModeToggle />
+          </header>
+          <div className="flex justify-between items-center">
+            <h1 className="text-3xl font-bold">Your Subscriptions</h1>
+            <div className="flex items-center gap-4">
+              <div className="flex gap-2">
+                <Button
+                  variant={sortBy === 'name' ? 'default' : 'outline'}
+                  onClick={() => handleSortChange('name')}
+                >
+                  Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </Button>
+                <Button
+                  variant={sortBy === 'price' ? 'default' : 'outline'}
+                  onClick={() => handleSortChange('price')}
+                >
+                  Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+                </Button>
+              </div>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
               </Button>
             </div>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
           </div>
-        </div>
 
-        <StatsCards
-          totalMonthly={totalMonthly}
-          activeSubscriptions={activeSubscriptions}
-          subscriptions={subscriptions}
-        />
+          <StatsCards
+            totalMonthly={totalMonthly}
+            activeSubscriptions={activeSubscriptions}
+            subscriptions={subscriptions}
+          />
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sortedSubscriptions.map((subscription) => (
-            <SubscriptionCard
-              key={subscription.id}
-              subscription={subscription}
-              onEdit={() => {
-                setSelectedSubscription(subscription);
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {sortedSubscriptions.map((subscription) => (
+              <SubscriptionCard
+                key={subscription.id}
+                subscription={subscription}
+                onEdit={() => {
+                  setSelectedSubscription(subscription);
+                  setDialogOpen(true);
+                }}
+                onToggleReminder={handleToggleReminder}
+              />
+            ))}
+            <AddSubscriptionButton
+              onClick={() => {
+                setSelectedSubscription(undefined);
                 setDialogOpen(true);
               }}
-              onToggleReminder={handleToggleReminder}
             />
-          ))}
-          <AddSubscriptionButton
-            onClick={() => {
-              setSelectedSubscription(undefined);
-              setDialogOpen(true);
-            }}
+          </div>
+
+          <SubscriptionDialog
+            open={dialogOpen}
+            onOpenChange={setDialogOpen}
+            onSave={handleSave}
+            onDelete={handleDelete}
+            subscription={selectedSubscription}
           />
-        </div>
 
-        <SubscriptionDialog
-          open={dialogOpen}
-          onOpenChange={setDialogOpen}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          subscription={selectedSubscription}
-        />
-
-        {/* Add the CategoryChart below the subscriptions */}
-        <div className="mt-12">
-          <CategoryChart subscriptions={subscriptions} />
+          {/* Add the CategoryChart below the subscriptions */}
+          <div className="mt-12">
+            <CategoryChart subscriptions={subscriptions} />
+          </div>
         </div>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }

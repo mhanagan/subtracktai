@@ -52,7 +52,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
   
   return sendEmail({
     to: email,
-    subject: "Reset Your SubTracker Password",
+    subject: "Reset Your SubTrackt Password",
     html: emailTemplates.passwordReset(resetLink),
   });
 }
@@ -60,7 +60,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
 export async function sendWelcomeEmail(email: string, name: string) {
   return sendEmail({
     to: email,
-    subject: "Welcome to SubTracker!",
+    subject: "Welcome to SubTrackt!",
     html: emailTemplates.welcome(name),
   });
 }

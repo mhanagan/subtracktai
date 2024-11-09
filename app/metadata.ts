@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Subscription Manager',
+  title: 'Subtrackt AI',
   description: 'Track and manage your recurring subscriptions',
 }; 

@@ -213,33 +213,45 @@ export default function DashboardPage() {
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
         <div className="container mx-auto px-4 py-16">
-          <header className="flex justify-between items-center mb-16">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
+          <header className="flex justify-between items-center mb-8">
+            <h1 className="text-4xl md:text-6xl font-bold">
               Subtrackt Dashboard
             </h1>
-            <DarkModeToggle />
+            <div className="flex flex-col items-end gap-2">
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleLogout}
+                  size="sm"
+                >
+                  <LogOut className="mr-1 h-3 w-3" />
+                  Logout
+                </Button>
+                <DarkModeToggle />
+              </div>
+            </div>
           </header>
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center mb-6">
             <h1 className="text-3xl font-bold">Your Subscriptions</h1>
-            <div className="flex items-center gap-4">
-              <div className="flex gap-2">
+            <div className="flex items-center gap-2 -mt-2 mr-8">
+              <div className="flex gap-1">
                 <Button
                   variant={sortBy === 'name' ? 'default' : 'outline'}
                   onClick={() => handleSortChange('name')}
+                  size="sm"
+                  className="transform -translate-y-1"
                 >
                   Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </Button>
                 <Button
                   variant={sortBy === 'price' ? 'default' : 'outline'}
                   onClick={() => handleSortChange('price')}
+                  size="sm"
+                  className="transform -translate-y-1"
                 >
                   Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </Button>
               </div>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
             </div>
           </div>
 

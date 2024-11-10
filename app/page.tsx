@@ -5,10 +5,10 @@ import Image from 'next/image';
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center p-8 md:p-24 gap-12">
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-24 gap-8 md:gap-12">
       {/* Logo and Header Section */}
-      <div className="flex flex-col items-center max-w-5xl w-full gap-8">
-        <div className="w-[900px] h-[300px] relative">
+      <div className="flex flex-col items-center w-full max-w-5xl gap-6 md:gap-8">
+        <div className="w-full max-w-[900px] h-[150px] md:h-[200px] lg:h-[300px] relative">
           <Image
             src="/subtrackt.jpg"
             alt="Subtrackt Logo"
@@ -18,29 +18,29 @@ export default function Home() {
           />
         </div>
         
-        <h1 className="text-4xl font-bold text-center">
+        <h1 className="text-3xl md:text-4xl font-bold text-center">
           Track Your Subscriptions<br />
           Never Miss a Payment
         </h1>
 
-        <p className="text-xl text-muted-foreground text-center max-w-2xl">
+        <p className="text-lg md:text-xl text-muted-foreground text-center max-w-2xl px-4">
           Keep track of all your subscriptions in one place. Get reminders before renewals and stay on top of your recurring payments.
         </p>
 
-        <div className="flex gap-4 justify-center">
-          <Button asChild size="lg">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center w-full px-4 sm:px-0">
+          <Button asChild size="lg" className="w-full sm:w-auto">
             <Link href="/auth/register">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </Button>
-          <Button asChild variant="outline" size="lg">
+          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
             <Link href="/auth/login">Sign In</Link>
           </Button>
         </div>
       </div>
 
       {/* Features Grid */}
-      <div className="grid md:grid-cols-3 gap-8 max-w-5xl w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8 w-full max-w-5xl px-4">
         <div className="bg-card p-6 rounded-lg shadow-lg">
           <Wallet className="h-12 w-12 text-primary mb-4" />
           <h3 className="text-xl font-semibold mb-2">Track Expenses</h3>
@@ -67,77 +67,35 @@ export default function Home() {
       </div>
 
       {/* Services Section */}
-      <div className="max-w-5xl w-full text-center">
-        <h2 className="text-2xl font-bold mb-8">Popular Services We Help You Track</h2>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-8 items-center justify-center">
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-16 w-16 relative">
-              <Image
-                src="/logos/netflix.png"
-                alt="Netflix"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <span className="text-sm font-medium">Netflix</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-16 w-16 relative">
-              <Image
-                src="/logos/chatgpt.png"
-                alt="ChatGPT"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <span className="text-sm font-medium">ChatGPT</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-16 w-16 relative">
-              <Image
-                src="/logos/prime.png"
-                alt="Prime Video"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <span className="text-sm font-medium">Prime</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-16 w-16 relative">
-              <Image
-                src="/logos/spotify.png"
-                alt="Spotify"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <span className="text-sm font-medium">Spotify</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-16 w-16 relative">
-              <Image
-                src="/logos/appletv.png"
-                alt="Apple TV+"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <span className="text-sm font-medium">Apple TV+</span>
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="h-16 w-16 relative">
-              <Image
-                src="/logos/midjourney.png"
-                alt="Midjourney"
-                fill
-                style={{ objectFit: 'contain' }}
-              />
-            </div>
-            <span className="text-sm font-medium">Midjourney</span>
-          </div>
+      <div className="w-full max-w-5xl text-center px-4">
+        <h2 className="text-xl md:text-2xl font-bold mb-6 md:mb-8">Popular Services We Help You Track</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 md:gap-8 items-center justify-center">
+          {/* Service items */}
+          <ServiceLogo src="/logos/netflix.png" name="Netflix" />
+          <ServiceLogo src="/logos/chatgpt.png" name="ChatGPT" />
+          <ServiceLogo src="/logos/prime.png" name="Prime" />
+          <ServiceLogo src="/logos/spotify.png" name="Spotify" />
+          <ServiceLogo src="/logos/appletv.png" name="Apple TV+" />
+          <ServiceLogo src="/logos/midjourney.png" name="Midjourney" />
         </div>
       </div>
     </main>
+  );
+}
+
+// Helper component for service logos
+function ServiceLogo({ src, name }: { src: string; name: string }) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div className="h-12 w-12 md:h-16 md:w-16 relative">
+        <Image
+          src={src}
+          alt={name}
+          fill
+          style={{ objectFit: 'contain' }}
+        />
+      </div>
+      <span className="text-sm font-medium">{name}</span>
+    </div>
   );
 }

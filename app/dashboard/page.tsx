@@ -231,15 +231,14 @@ export default function DashboardPage() {
               </div>
             </div>
           </header>
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">Your Subscriptions</h1>
-            <div className="flex items-center gap-2 -mt-2 mr-8">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+            <h1 className="text-3xl font-bold mb-4 sm:mb-0">Your Subscriptions</h1>
+            <div className="flex items-center gap-2 self-end">
               <div className="flex gap-1">
                 <Button
                   variant={sortBy === 'name' ? 'default' : 'outline'}
                   onClick={() => handleSortChange('name')}
                   size="sm"
-                  className="transform -translate-y-1"
                 >
                   Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </Button>
@@ -247,7 +246,6 @@ export default function DashboardPage() {
                   variant={sortBy === 'price' ? 'default' : 'outline'}
                   onClick={() => handleSortChange('price')}
                   size="sm"
-                  className="transform -translate-y-1"
                 >
                   Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
                 </Button>

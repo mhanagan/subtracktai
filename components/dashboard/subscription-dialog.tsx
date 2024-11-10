@@ -80,6 +80,9 @@ export function SubscriptionDialog({
       renewal_date: renewalDate,
       reminder_enabled: reminderEnabled,
     };
+
+    console.log('Saving subscription with renewal date:', renewalDate);
+
     onSave(subscriptionData);
   };
 

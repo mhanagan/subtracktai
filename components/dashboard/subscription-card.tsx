@@ -14,9 +14,15 @@ interface SubscriptionCardProps {
 
 export function SubscriptionCard({ subscription, onEdit, onToggleReminder }: SubscriptionCardProps) {
   const { toast } = useToast();
+  
+  // Ensure we're using UTC dates for comparison
+  const renewalDate = new Date(subscription.renewal_date + 'T00:00:00Z');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
   const daysUntilRenewal = Math.ceil(
-    (new Date(subscription.renewal_date).getTime() - new Date().getTime()) /
-      (1000 * 60 * 60 * 24)
+    (renewalDate.getTime() - today.getTime()) /
+    (1000 * 60 * 60 * 24)
   );
 
   const handleToggleReminder = () => {
@@ -72,8 +78,10 @@ export function SubscriptionCard({ subscription, onEdit, onToggleReminder }: Sub
               Next Renewal
             </span>
             <span className="font-medium">
-              {new Date(subscription.renewal_date).toLocaleDateString()}
-              {daysUntilRenewal <= 7 && (
+              {renewalDate.toLocaleDateString(undefined, {
+                timeZone: 'UTC'
+              })}
+              {daysUntilRenewal <= 7 && daysUntilRenewal >= 0 && (
                 <span className="ml-2 text-xs text-red-500">
                   ({daysUntilRenewal} days)
                 </span>

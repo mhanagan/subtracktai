@@ -21,7 +21,7 @@ export async function GET(request: Request) {
         name,
         category,
         price::float,
-        TO_CHAR(renewal_date, 'YYYY-MM-DD') as renewal_date,
+        (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
         reminder_enabled,
         user_email
       FROM subscriptions 
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         ${name},
         ${category},
         ${price}::decimal,
-        ${formattedDate}::date,
+        ${formattedDate}::date AT TIME ZONE 'UTC',
         ${reminderEnabled},
         ${userEmail}
       )
@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         name,
         category,
         price::float,
-        TO_CHAR(renewal_date, 'YYYY-MM-DD') as renewal_date,
+        (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
         reminder_enabled,
         user_email
     `;
@@ -113,7 +113,7 @@ export async function PUT(request: Request) {
         name = ${name},
         category = ${category},
         price = ${price}::decimal,
-        renewal_date = ${renewalDate}::date,
+        renewal_date = ${renewalDate}::date AT TIME ZONE 'UTC',
         reminder_enabled = ${reminderEnabled}
       WHERE id = ${id} AND user_email = ${userEmail}
       RETURNING 
@@ -121,7 +121,7 @@ export async function PUT(request: Request) {
         name,
         category,
         price::float,
-        TO_CHAR(renewal_date, 'YYYY-MM-DD') as renewal_date,
+        (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
         reminder_enabled,
         user_email
     `;

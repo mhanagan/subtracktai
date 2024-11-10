@@ -12,6 +12,7 @@ import DarkModeToggle from '@/components/DarkModeToggle';
 import CategoryChart from '@/components/CategoryChart';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Subscription } from '@/types/subscription';
+import { addMonths, parseISO, isSameDay } from 'date-fns';
 
 function AddSubscriptionButton({ onClick }: { onClick: () => void }) {
   return (
@@ -24,6 +25,23 @@ function AddSubscriptionButton({ onClick }: { onClick: () => void }) {
       Add Subscription
     </Button>
   );
+}
+
+function updateRenewalDate(subscription: Subscription): Subscription {
+  const today = new Date();
+  const renewalDate = parseISO(subscription.renewal_date);
+  
+  // Check if today is the renewal date
+  if (isSameDay(today, renewalDate)) {
+    // Set the new renewal date to one month from the current renewal date
+    const newRenewalDate = addMonths(renewalDate, 1);
+    return {
+      ...subscription,
+      renewal_date: newRenewalDate.toISOString().split('T')[0]
+    };
+  }
+  
+  return subscription;
 }
 
 export default function DashboardPage() {
@@ -71,6 +89,58 @@ export default function DashboardPage() {
 
     fetchSubscriptions();
   }, [router, toast]);
+
+  // Add this effect to check and update renewal dates
+  useEffect(() => {
+    const updatedSubscriptions = subscriptions.map(updateRenewalDate);
+    
+    // Check if any subscriptions were updated
+    const hasUpdates = updatedSubscriptions.some(
+      (updated, index) => updated.renewal_date !== subscriptions[index].renewal_date
+    );
+
+    if (hasUpdates) {
+      // Update the local state
+      setSubscriptions(updatedSubscriptions);
+
+      // Update the database
+      const userEmail = localStorage.getItem('userEmail');
+      if (!userEmail) return;
+
+      // Update each modified subscription in the database
+      updatedSubscriptions.forEach(async (subscription) => {
+        const original = subscriptions.find(s => s.id === subscription.id);
+        if (original?.renewal_date !== subscription.renewal_date) {
+          try {
+            await fetch('/api/subscriptions', {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json',
+                'user-email': userEmail
+              },
+              body: JSON.stringify({
+                ...subscription,
+                renewalDate: subscription.renewal_date,
+                userEmail
+              })
+            });
+
+            toast({
+              title: "Renewal Date Updated",
+              description: `${subscription.name}'s next renewal date has been set to ${new Date(subscription.renewal_date).toLocaleDateString()}`,
+            });
+          } catch (error) {
+            console.error('Error updating renewal date:', error);
+            toast({
+              title: "Error",
+              description: "Failed to update renewal date",
+              variant: "destructive",
+            });
+          }
+        }
+      });
+    }
+  }, [subscriptions, toast]);
 
   const handleLogout = () => {
     // Clear user-specific data

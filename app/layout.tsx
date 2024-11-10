@@ -20,6 +20,22 @@ export const metadata: Metadata = {
       },
     ],
   },
+  icons: {
+    icon: [
+      { url: '/favicon.ico' },
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/apple-touch-icon.png' },
+    ],
+    other: [
+      {
+        rel: 'manifest',
+        url: '/site.webmanifest'
+      }
+    ],
+  },
 }
 
 export default function RootLayout({
@@ -29,6 +45,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Android Chrome */}
+        <meta name="theme-color" content="#ffffff" />
+        <link rel="manifest" href="/site.webmanifest" />
+      </head>
       <body className={inter.className} suppressHydrationWarning>
         <ThemeProviderWrapper>
           {children}

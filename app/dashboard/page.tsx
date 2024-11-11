@@ -49,7 +49,7 @@ export default function DashboardPage() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedSubscription, setSelectedSubscription] = useState<Subscription>();
-  const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
+  const [sortBy, setSortBy] = useState<'name' | 'price' | 'date'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const { toast } = useToast();
 
@@ -157,14 +157,19 @@ export default function DashboardPage() {
       return sortOrder === 'asc' 
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
-    } else {
+    } else if (sortBy === 'price') {
       return sortOrder === 'asc' 
         ? a.price - b.price
         : b.price - a.price;
+    } else {
+      // Sort by date
+      return sortOrder === 'asc'
+        ? new Date(a.renewal_date).getTime() - new Date(b.renewal_date).getTime()
+        : new Date(b.renewal_date).getTime() - new Date(a.renewal_date).getTime();
     }
   });
 
-  const handleSortChange = (newSortBy: 'name' | 'price') => {
+  const handleSortChange = (newSortBy: 'name' | 'price' | 'date') => {
     if (sortBy === newSortBy) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
@@ -322,33 +327,39 @@ export default function DashboardPage() {
               </div>
             </div>
           </header>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-            <h1 className="text-3xl font-bold mb-4 sm:mb-0">Your Subscriptions</h1>
-            <div className="flex items-center gap-2 self-end">
-              <div className="flex gap-1">
-                <Button
-                  variant={sortBy === 'name' ? 'default' : 'outline'}
-                  onClick={() => handleSortChange('name')}
-                  size="sm"
-                >
-                  Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </Button>
-                <Button
-                  variant={sortBy === 'price' ? 'default' : 'outline'}
-                  onClick={() => handleSortChange('price')}
-                  size="sm"
-                >
-                  Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
-                </Button>
-              </div>
-            </div>
-          </div>
 
           <StatsCards
             totalMonthly={totalMonthly}
             activeSubscriptions={activeSubscriptions}
             subscriptions={subscriptions}
           />
+
+          {/* Sort buttons moved here */}
+          <div className="flex justify-end mb-4">
+            <div className="flex gap-1">
+              <Button
+                variant={sortBy === 'name' ? 'default' : 'outline'}
+                onClick={() => handleSortChange('name')}
+                size="sm"
+              >
+                Name {sortBy === 'name' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </Button>
+              <Button
+                variant={sortBy === 'price' ? 'default' : 'outline'}
+                onClick={() => handleSortChange('price')}
+                size="sm"
+              >
+                Price {sortBy === 'price' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </Button>
+              <Button
+                variant={sortBy === 'date' ? 'default' : 'outline'}
+                onClick={() => handleSortChange('date')}
+                size="sm"
+              >
+                Date {sortBy === 'date' && (sortOrder === 'asc' ? '↑' : '↓')}
+              </Button>
+            </div>
+          </div>
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {sortedSubscriptions.map((subscription) => (

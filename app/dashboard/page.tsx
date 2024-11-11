@@ -412,7 +412,7 @@ export default function DashboardPage() {
               />
             </a>
             <p className="text-muted-foreground text-sm">
-              If you're enjoying this app, buy us a coffee to support our work!
+              If you're enjoying this app, buy us a coffee to support us!
             </p>
           </div>
         </div>

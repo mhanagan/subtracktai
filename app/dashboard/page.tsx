@@ -13,6 +13,7 @@ import CategoryChart from '@/components/CategoryChart';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Subscription } from '@/types/subscription';
 import { addMonths, parseISO, isSameDay } from 'date-fns';
+import Image from 'next/image';
 
 function AddSubscriptionButton({ onClick }: { onClick: () => void }) {
   return (
@@ -392,6 +393,27 @@ export default function DashboardPage() {
           {/* Add the CategoryChart below the subscriptions */}
           <div className="mt-12">
             <CategoryChart subscriptions={subscriptions} />
+          </div>
+
+          {/* Buy Me a Coffee Banner */}
+          <div className="flex flex-col items-center mt-12 mb-4 gap-3">
+            <a 
+              href="https://buymeacoffee.com/subtrackt"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-90 transition-opacity"
+            >
+              <Image
+                src="/bmc-button.png"
+                alt="Buy me a coffee"
+                width={200}
+                height={56}
+                className="rounded-lg shadow-md"
+              />
+            </a>
+            <p className="text-muted-foreground text-sm">
+              If you're enjoying this app, buy us a coffee to support our work!
+            </p>
           </div>
         </div>
       </div>

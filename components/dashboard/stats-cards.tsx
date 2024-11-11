@@ -78,11 +78,11 @@ export function StatsCards({ totalMonthly, activeSubscriptions, subscriptions }:
                         timeZone: 'UTC'
                       })}</span>
                       <span className="text-xs text-red-500 font-medium">
-                        ({Math.floor(
+                        ({Math.ceil(
                           (new Date(sub.renewal_date + 'T00:00:00Z').getTime() - 
                            new Date(new Date().toISOString().split('T')[0] + 'T00:00:00Z').getTime()) /
                           (1000 * 60 * 60 * 24)
-                        ) + 1} days)
+                        )} days)
                       </span>
                     </div>
                   </div>
@@ -112,10 +112,10 @@ function getUpcomingRenewals(subscriptions: Subscription[]): Subscription[] {
     .filter(sub => {
       const renewalDate = new Date(sub.renewal_date + 'T00:00:00Z');
       const todayDate = new Date(todayStr + 'T00:00:00Z');
-      const daysUntil = Math.floor(
+      const daysUntil = Math.ceil(
         (renewalDate.getTime() - todayDate.getTime()) /
         (1000 * 60 * 60 * 24)
-      ) + 1;
+      );
       return daysUntil > 0 && daysUntil <= 7;
     })
     .sort((a, b) => 

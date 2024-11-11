@@ -8,21 +8,22 @@ export const runtime = 'nodejs';
 
 export async function GET(request: Request) {
   try {
+    console.log('Starting check-renewals cron job at:', new Date().toISOString());
+    
     // Verify cron secret
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-      console.error('Unauthorized cron job attempt');
+      console.error('Unauthorized cron job attempt:', authHeader);
       return new Response('Unauthorized', { status: 401 });
     }
-
-    console.log('Starting daily renewal check...');
 
     // Get tomorrow's date in YYYY-MM-DD format
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    console.log('Checking for subscriptions renewing on:', tomorrowStr);
 
-    // Fetch subscriptions that renew tomorrow and have reminders enabled
+    // Fetch subscriptions
     const { rows } = await sql`
       SELECT 
         id,
@@ -38,7 +39,7 @@ export async function GET(request: Request) {
         AND reminder_enabled = true
     `;
 
-    console.log(`Found ${rows.length} subscriptions renewing tomorrow:`, rows);
+    console.log('Found subscriptions:', JSON.stringify(rows, null, 2));
 
     const remindersSent = [];
     const errors = [];
@@ -93,7 +94,7 @@ export async function GET(request: Request) {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    console.error('Error in renewal check cron:', error);
+    console.error('Error in check-renewals cron:', error);
     return NextResponse.json(
       { 
         success: false,

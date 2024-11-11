@@ -151,9 +151,11 @@ export async function DELETE(request: Request) {
       );
     }
 
+    console.log('Deleting subscription:', { id, userEmail });
+
     const { rows } = await sql`
       DELETE FROM subscriptions 
-      WHERE id = ${id} AND user_email = ${userEmail}
+      WHERE id = ${parseInt(id)} AND user_email = ${userEmail}
       RETURNING *
     `;
 
@@ -164,6 +166,7 @@ export async function DELETE(request: Request) {
       );
     }
 
+    console.log('Successfully deleted subscription:', rows[0]);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting subscription:', error);

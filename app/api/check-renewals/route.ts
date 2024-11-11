@@ -1,86 +1,90 @@
 import { sendSubscriptionReminder } from '@/lib/email';
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
-import { QueryResultRow } from '@vercel/postgres';
-
-interface Subscription {
-  id: number;
-  name: string;
-  category: string;
-  price: number;
-  renewal_date: string;
-  reminder_enabled: boolean;
-  user_email: string;
-}
+import { Subscription } from '@/types/subscription';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
+    // Verify cron secret
     const authHeader = request.headers.get('authorization');
     if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      console.error('Unauthorized cron job attempt');
       return new Response('Unauthorized', { status: 401 });
     }
 
-    const { rows } = await sql`SELECT * FROM subscriptions`;
-    // Cast the rows to match the Subscription interface
-    const subscriptions: Subscription[] = rows.map(row => ({
-      id: row.id,
-      name: row.name,
-      category: row.category,
-      price: row.price,
-      renewal_date: row.renewal_date,
-      reminder_enabled: row.reminder_enabled,
-      user_email: row.user_email
-    }));
+    console.log('Starting daily renewal check...');
 
+    // Get tomorrow's date in YYYY-MM-DD format
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    // Fetch subscriptions that renew tomorrow and have reminders enabled
+    const { rows } = await sql`
+      SELECT 
+        id,
+        name,
+        category,
+        price::float,
+        (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
+        reminder_enabled,
+        user_email
+      FROM subscriptions 
+      WHERE 
+        renewal_date::date = ${tomorrowStr}::date
+        AND reminder_enabled = true
+    `;
+
+    console.log(`Found ${rows.length} subscriptions renewing tomorrow:`, rows);
 
     const remindersSent = [];
     const errors = [];
 
-    for (const subscription of subscriptions) {
-      const renewalDate = new Date(subscription.renewal_date);
-      renewalDate.setHours(0, 0, 0, 0);
+    // Send reminders for each subscription
+    for (const subscription of rows) {
+      try {
+        console.log(`Sending reminder for subscription: ${subscription.name} to ${subscription.user_email}`);
+        
+        // Cast the database row to match the Subscription interface
+        const subscriptionData: Subscription = {
+          id: subscription.id,
+          name: subscription.name,
+          category: subscription.category,
+          price: subscription.price,
+          renewal_date: subscription.renewal_date,
+          reminder_enabled: subscription.reminder_enabled,
+          user_email: subscription.user_email
+        };
 
-      if (
-        renewalDate.getTime() === tomorrow.getTime() &&
-        subscription.reminder_enabled
-      ) {
-        try {
-          const result = await sendSubscriptionReminder(
-            subscription,
-            subscription.user_email
-          );
+        const result = await sendSubscriptionReminder(subscriptionData, subscription.user_email);
 
-          if (result.success) {
-            remindersSent.push({
-              id: subscription.id,
-              name: subscription.name,
-              email: subscription.user_email
-            });
-          } else {
-            errors.push({
-              id: subscription.id,
-              name: subscription.name,
-              error: 'Failed to send reminder'
-            });
-          }
-        } catch (error) {
+        if (result.success) {
+          remindersSent.push({
+            id: subscription.id,
+            name: subscription.name,
+            email: subscription.user_email
+          });
+          console.log(`Successfully sent reminder for ${subscription.name}`);
+        } else {
+          console.error(`Failed to send reminder for ${subscription.name}:`, result.error);
           errors.push({
             id: subscription.id,
             name: subscription.name,
-            error: 'Error processing reminder'
+            error: 'Failed to send reminder'
           });
         }
+      } catch (error) {
+        console.error(`Error processing reminder for ${subscription.name}:`, error);
+        errors.push({
+          id: subscription.id,
+          name: subscription.name,
+          error: error instanceof Error ? error.message : 'Error processing reminder'
+        });
       }
     }
-
-    console.log(`Renewal check completed: ${remindersSent.length} reminders sent, ${errors.length} errors`);
 
     return NextResponse.json({
       success: true,

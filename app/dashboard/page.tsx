@@ -238,21 +238,42 @@ export default function DashboardPage() {
     }
   };
 
-  const handleDelete = (subscription: Subscription) => {
+  const handleDelete = async (subscription: Subscription) => {
     const userEmail = localStorage.getItem('userEmail');
     if (!userEmail) {
       router.push('/auth/login');
       return;
     }
 
-    const updatedSubscriptions = subscriptions.filter((sub) => sub.id !== subscription.id);
-    setSubscriptions(updatedSubscriptions);
-    setDialogOpen(false);
-    toast({
-      title: "Subscription deleted",
-      description: `${subscription.name} has been removed.`,
-      variant: "destructive",
-    });
+    try {
+      const response = await fetch(`/api/subscriptions?id=${subscription.id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'user-email': userEmail
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete subscription');
+      }
+
+      const updatedSubscriptions = subscriptions.filter((sub) => sub.id !== subscription.id);
+      setSubscriptions(updatedSubscriptions);
+      setDialogOpen(false);
+      toast({
+        title: "Subscription deleted",
+        description: `${subscription.name} has been removed.`,
+        variant: "destructive",
+      });
+    } catch (error) {
+      console.error('Error deleting subscription:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete subscription",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleToggleReminder = (subscription: Subscription) => {

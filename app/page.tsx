@@ -20,7 +20,7 @@ export default function Home() {
         
         <h1 className="text-3xl md:text-4xl font-bold text-center">
           Track Your Subscriptions<br />
-          Never Miss a Payment
+          Avoid those surprise charges
         </h1>
 
         <p className="text-lg md:text-xl text-muted-foreground text-center max-w-2xl px-4">

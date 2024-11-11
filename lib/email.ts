@@ -1,66 +1,36 @@
-import { emailTemplates } from './email-templates';
-import { rateLimit } from './rate-limit';
+import sgMail from '@sendgrid/mail';
 
-export interface EmailOptions {
-  to: string;
-  subject: string;
-  html: string;
+sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+
+interface Subscription {
+  id: number;
+  name: string;
+  price: number;
+  renewal_date: string;
 }
 
-export async function sendEmail({ to, subject, html }: EmailOptions) {
+export async function sendSubscriptionReminder(subscription: Subscription, userEmail: string) {
   try {
-    // Apply rate limiting
-    const rateLimitResult = await rateLimit(to);
-    if (!rateLimitResult.success) {
-      throw new Error('Rate limit exceeded');
-    }
+    console.log(`Attempting to send reminder email for ${subscription.name} to ${userEmail}`);
 
-    const response = await fetch('/api/send-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        to,
-        subject,
-        html,
-      }),
-    });
+    const msg = {
+      to: userEmail,
+      from: 'notifications@subtrackt.com', // Make sure this is verified in SendGrid
+      subject: `Reminder: ${subscription.name} renews tomorrow`,
+      html: `
+        <h2>Subscription Renewal Reminder</h2>
+        <p>Your subscription to ${subscription.name} will renew tomorrow.</p>
+        <p>Amount: $${subscription.price.toFixed(2)}</p>
+        <p>Renewal Date: ${new Date(subscription.renewal_date).toLocaleDateString()}</p>
+        <p>Log in to your Subtrackt dashboard to manage your subscriptions.</p>
+      `,
+    };
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to send email');
-    }
-
+    const response = await sgMail.send(msg);
+    console.log('Email sent successfully:', response);
     return { success: true };
   } catch (error) {
-    console.error('Failed to send email:', error);
+    console.error('Error sending reminder email:', error);
     return { success: false, error };
   }
-}
-
-export async function sendSubscriptionReminder(subscription: any, userEmail: string) {
-  return sendEmail({
-    to: userEmail,
-    subject: `Subscription Renewal Reminder: ${subscription.name}`,
-    html: emailTemplates.subscriptionReminder(subscription),
-  });
-}
-
-export async function sendPasswordResetEmail(email: string, resetToken: string) {
-  const resetLink = `${process.env.NEXT_PUBLIC_SITE_URL}/auth/reset-password/${resetToken}`;
-  
-  return sendEmail({
-    to: email,
-    subject: "Reset Your SubTrackt Password",
-    html: emailTemplates.passwordReset(resetLink),
-  });
-}
-
-export async function sendWelcomeEmail(email: string, name: string) {
-  return sendEmail({
-    to: email,
-    subject: "Welcome to SubTrackt!",
-    html: emailTemplates.welcome(name),
-  });
 }

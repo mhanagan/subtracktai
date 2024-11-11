@@ -1,6 +1,5 @@
-import sgMail from '@sendgrid/mail';
-
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const SENDGRID_API_URL = 'https://api.sendgrid.com/v3/mail/send';
 
 interface Subscription {
   id: number;
@@ -13,21 +12,44 @@ export async function sendSubscriptionReminder(subscription: Subscription, userE
   try {
     console.log(`Attempting to send reminder email for ${subscription.name} to ${userEmail}`);
 
-    const msg = {
-      to: userEmail,
-      from: 'notifications@subtrackt.com', // Make sure this is verified in SendGrid
-      subject: `Reminder: ${subscription.name} renews tomorrow`,
-      html: `
-        <h2>Subscription Renewal Reminder</h2>
-        <p>Your subscription to ${subscription.name} will renew tomorrow.</p>
-        <p>Amount: $${subscription.price.toFixed(2)}</p>
-        <p>Renewal Date: ${new Date(subscription.renewal_date).toLocaleDateString()}</p>
-        <p>Log in to your Subtrackt dashboard to manage your subscriptions.</p>
-      `,
-    };
+    if (!SENDGRID_API_KEY) {
+      throw new Error('SendGrid API key is not configured');
+    }
 
-    const response = await sgMail.send(msg);
-    console.log('Email sent successfully:', response);
+    const response = await fetch(SENDGRID_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personalizations: [{
+          to: [{ email: userEmail }]
+        }],
+        from: {
+          email: 'notifications@subtrackt.com',
+          name: 'Subtrackt'
+        },
+        subject: `Reminder: ${subscription.name} renews tomorrow`,
+        content: [{
+          type: 'text/html',
+          value: `
+            <h2>Subscription Renewal Reminder</h2>
+            <p>Your subscription to ${subscription.name} will renew tomorrow.</p>
+            <p>Amount: $${subscription.price.toFixed(2)}</p>
+            <p>Renewal Date: ${new Date(subscription.renewal_date).toLocaleDateString()}</p>
+            <p>Log in to your Subtrackt dashboard to manage your subscriptions.</p>
+          `
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to send email through SendGrid');
+    }
+
+    console.log('Email sent successfully');
     return { success: true };
   } catch (error) {
     console.error('Error sending reminder email:', error);

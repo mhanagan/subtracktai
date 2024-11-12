@@ -17,32 +17,35 @@ export async function GET(request: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Get tomorrow's date in YYYY-MM-DD format for multiple timezones
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    // Get current UTC time
+    const now = new Date();
     
-    // Also check the day after to account for timezone differences
-    const dayAfter = new Date(tomorrow);
-    dayAfter.setDate(dayAfter.getDate() + 1);
-    const dayAfterStr = dayAfter.toISOString().split('T')[0];
+    // Calculate the date range for renewals (next 48 hours)
+    const startDate = new Date(now);
+    startDate.setUTCHours(now.getUTCHours() + 25, 0, 0, 0); // 25 hours from now
+    const endDate = new Date(startDate);
+    endDate.setUTCHours(endDate.getUTCHours() + 24); // 24 hours after start date
 
-    console.log('Checking for subscriptions renewing on:', tomorrowStr, 'or', dayAfterStr);
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
 
-    // Fetch subscriptions for both days
+    console.log('Checking for subscriptions renewing between:', startDateStr, 'and', endDateStr);
+
+    // Fetch subscriptions for the date range
     const { rows } = await sql`
       SELECT 
         id,
         name,
         category,
         price::float,
-        (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
+        renewal_date,
         reminder_enabled,
-        user_email
+        user_email,
+        timezone
       FROM subscriptions 
       WHERE 
-        (renewal_date::date = ${tomorrowStr}::date OR 
-         renewal_date::date = ${dayAfterStr}::date)
+        renewal_date::date >= ${startDateStr}::date
+        AND renewal_date::date <= ${endDateStr}::date
         AND reminder_enabled = true
     `;
 
@@ -54,27 +57,34 @@ export async function GET(request: Request) {
 
     for (const subscription of rows) {
       try {
-        // Convert the database row to a Subscription type
-        const subscriptionData: Subscription = {
-          id: subscription.id,
-          name: subscription.name,
-          category: subscription.category,
-          price: subscription.price,
-          renewal_date: subscription.renewal_date,
-          reminder_enabled: subscription.reminder_enabled,
-          user_email: subscription.user_email
-        };
+        // Convert renewal_date to user's local time
+        const userLocalTime = new Date(subscription.renewal_date).toLocaleString('en-US', { timeZone: subscription.timezone });
+        const userLocalDate = new Date(userLocalTime);
 
-        const result = await sendSubscriptionReminder(subscriptionData, subscription.user_email);
-        if (result.success) {
-          remindersSent.push({
+        // Check if it's 1 PM the day before renewal in user's timezone
+        if (userLocalDate.getHours() === 13 && userLocalDate.getDate() === now.getUTCDate() + 1) {
+          const subscriptionData: Subscription = {
             id: subscription.id,
             name: subscription.name,
-            email: subscription.user_email
-          });
+            category: subscription.category,
+            price: subscription.price,
+            renewal_date: subscription.renewal_date,
+            reminder_enabled: subscription.reminder_enabled,
+            user_email: subscription.user_email,
+            timezone: subscription.timezone
+          };
+
+          const result = await sendSubscriptionReminder(subscriptionData, subscription.user_email);
+          if (result.success) {
+            remindersSent.push({
+              id: subscription.id,
+              name: subscription.name,
+              email: subscription.user_email
+            });
+          }
         }
       } catch (error) {
-        console.error('Error sending reminder for subscription:', subscription.id, error);
+        console.error('Error processing subscription:', subscription.id, error);
         errors.push({
           id: subscription.id,
           name: subscription.name,

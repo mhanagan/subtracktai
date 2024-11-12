@@ -6,4 +6,5 @@ export interface Subscription {
   renewal_date: string;
   reminder_enabled: boolean;
   user_email?: string;
+  timezone: string;
 } 

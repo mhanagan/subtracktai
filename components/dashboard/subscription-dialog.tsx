@@ -51,6 +51,8 @@ export function SubscriptionDialog({
   const [renewalDate, setRenewalDate] = useState("");
   const [reminderEnabled, setReminderEnabled] = useState(false);
 
+  const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
   useEffect(() => {
     if (open) {
       if (subscription) {
@@ -79,6 +81,7 @@ export function SubscriptionDialog({
       price: parseFloat(price),
       renewal_date: renewalDate,
       reminder_enabled: reminderEnabled,
+      timezone: userTimeZone,
     };
 
     console.log('Saving subscription with renewal date:', renewalDate);

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test-cron": "ts-node scripts/test-cron.ts"
+    "test-cron": "cross-env CRON_SECRET=1972150912542 ts-node scripts/test-cron.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.4",

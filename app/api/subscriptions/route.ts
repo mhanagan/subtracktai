@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { name, category, price, renewalDate, reminderEnabled, userEmail } = await request.json();
+    const { name, category, price, renewalDate, reminderEnabled, userEmail, timezone } = await request.json();
 
     console.log('Creating subscription:', {
       name,
@@ -59,6 +59,16 @@ export async function POST(request: Request) {
     // Ensure the date is in the correct format (YYYY-MM-DD)
     const formattedDate = renewalDate.split('T')[0];
 
+    const data = {
+      name,
+      category,
+      price,
+      renewal_date: formattedDate,
+      reminder_enabled: reminderEnabled,
+      user_email: userEmail,
+      timezone
+    };
+
     const { rows } = await sql`
       INSERT INTO subscriptions (
         name,
@@ -66,14 +76,16 @@ export async function POST(request: Request) {
         price,
         renewal_date,
         reminder_enabled,
-        user_email
+        user_email,
+        timezone
       ) VALUES (
-        ${name},
-        ${category},
-        ${price}::decimal,
-        ${formattedDate}::date AT TIME ZONE 'UTC',
-        ${reminderEnabled},
-        ${userEmail}
+        ${data.name},
+        ${data.category},
+        ${data.price}::decimal,
+        ${data.renewal_date}::date AT TIME ZONE 'UTC',
+        ${data.reminder_enabled},
+        ${data.user_email},
+        ${data.timezone}
       )
       RETURNING 
         id,
@@ -82,7 +94,8 @@ export async function POST(request: Request) {
         price::float,
         (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
         reminder_enabled,
-        user_email
+        user_email,
+        timezone
     `;
 
     console.log('Created subscription:', rows[0]);
@@ -95,7 +108,7 @@ export async function POST(request: Request) {
 
 export async function PUT(request: Request) {
   try {
-    const { id, name, category, price, renewalDate, reminderEnabled, userEmail } = await request.json();
+    const { id, name, category, price, renewalDate, reminderEnabled, userEmail, timezone } = await request.json();
 
     console.log('Updating subscription:', {
       id,
@@ -107,15 +120,25 @@ export async function PUT(request: Request) {
       userEmail
     });
 
+    const data = {
+      name: name,
+      category: category,
+      price: price,
+      renewal_date: renewalDate,
+      reminder_enabled: reminderEnabled,
+      user_email: userEmail,
+      timezone: timezone || 'America/New_York'
+    };
+
     const { rows } = await sql`
       UPDATE subscriptions 
       SET 
-        name = ${name},
-        category = ${category},
-        price = ${price}::decimal,
-        renewal_date = ${renewalDate}::date AT TIME ZONE 'UTC',
-        reminder_enabled = ${reminderEnabled}
-      WHERE id = ${id} AND user_email = ${userEmail}
+        name = ${data.name},
+        category = ${data.category},
+        price = ${data.price}::decimal,
+        renewal_date = ${data.renewal_date}::date AT TIME ZONE 'UTC',
+        reminder_enabled = ${data.reminder_enabled}
+      WHERE id = ${id} AND user_email = ${data.user_email}
       RETURNING 
         id,
         name,
@@ -123,7 +146,8 @@ export async function PUT(request: Request) {
         price::float,
         (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
         reminder_enabled,
-        user_email
+        user_email,
+        timezone
     `;
 
     if (rows.length === 0) {

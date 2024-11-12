@@ -2,12 +2,11 @@ async function testCron() {
   try {
     console.log('Testing cron job...');
     
-    // Check if CRON_SECRET exists
     if (!process.env.CRON_SECRET) {
       throw new Error('CRON_SECRET is not set in environment variables');
     }
 
-    const response = await fetch('http://localhost:3000/api/check-renewals', {
+    const response = await fetch('https://subtracktai.vercel.app/api/check-renewals', {
       headers: {
         'Authorization': `Bearer ${process.env.CRON_SECRET}`
       }

@@ -17,13 +17,19 @@ export async function GET(request: Request) {
       return new Response('Unauthorized', { status: 401 });
     }
 
-    // Get tomorrow's date in YYYY-MM-DD format
+    // Get tomorrow's date in YYYY-MM-DD format for multiple timezones
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    console.log('Checking for subscriptions renewing on:', tomorrowStr);
+    
+    // Also check the day after to account for timezone differences
+    const dayAfter = new Date(tomorrow);
+    dayAfter.setDate(dayAfter.getDate() + 1);
+    const dayAfterStr = dayAfter.toISOString().split('T')[0];
 
-    // Fetch subscriptions
+    console.log('Checking for subscriptions renewing on:', tomorrowStr, 'or', dayAfterStr);
+
+    // Fetch subscriptions for both days
     const { rows } = await sql`
       SELECT 
         id,
@@ -35,21 +41,20 @@ export async function GET(request: Request) {
         user_email
       FROM subscriptions 
       WHERE 
-        renewal_date::date = ${tomorrowStr}::date
+        (renewal_date::date = ${tomorrowStr}::date OR 
+         renewal_date::date = ${dayAfterStr}::date)
         AND reminder_enabled = true
     `;
 
     console.log('Found subscriptions:', JSON.stringify(rows, null, 2));
 
+    // Process each subscription
     const remindersSent = [];
     const errors = [];
 
-    // Send reminders for each subscription
     for (const subscription of rows) {
       try {
-        console.log(`Sending reminder for subscription: ${subscription.name} to ${subscription.user_email}`);
-        
-        // Cast the database row to match the Subscription interface
+        // Convert the database row to a Subscription type
         const subscriptionData: Subscription = {
           id: subscription.id,
           name: subscription.name,
@@ -61,47 +66,39 @@ export async function GET(request: Request) {
         };
 
         const result = await sendSubscriptionReminder(subscriptionData, subscription.user_email);
-
         if (result.success) {
           remindersSent.push({
             id: subscription.id,
             name: subscription.name,
             email: subscription.user_email
           });
-          console.log(`Successfully sent reminder for ${subscription.name}`);
-        } else {
-          console.error(`Failed to send reminder for ${subscription.name}:`, result.error);
-          errors.push({
-            id: subscription.id,
-            name: subscription.name,
-            error: 'Failed to send reminder'
-          });
         }
       } catch (error) {
-        console.error(`Error processing reminder for ${subscription.name}:`, error);
+        console.error('Error sending reminder for subscription:', subscription.id, error);
         errors.push({
           id: subscription.id,
           name: subscription.name,
-          error: error instanceof Error ? error.message : 'Error processing reminder'
+          error: error instanceof Error ? error.message : 'Unknown error'
         });
       }
     }
 
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       success: true,
       remindersSent,
       errors: errors.length > 0 ? errors : undefined,
       timestamp: new Date().toISOString()
+    }), {
+      headers: { 'Content-Type': 'application/json' }
     });
   } catch (error) {
-    console.error('Error in check-renewals cron:', error);
-    return NextResponse.json(
-      { 
-        success: false,
-        error: 'Internal server error',
-        timestamp: new Date().toISOString()
-      },
-      { status: 500 }
-    );
+    console.error('Error in check-renewals:', error);
+    return new Response(JSON.stringify({
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }

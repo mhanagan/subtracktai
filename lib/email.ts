@@ -145,3 +145,70 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
     return { success: false, error };
   }
 }
+
+export async function sendCombinedRenewalReminders(subscriptions: Subscription[], userEmail: string) {
+  try {
+    const totalAmount = subscriptions.reduce((sum, sub) => sum + sub.price, 0);
+    
+    const subscriptionsList = subscriptions
+      .map(sub => `
+        <tr>
+          <td style="padding: 12px;">${sub.name}</td>
+          <td style="padding: 12px;">$${sub.price.toFixed(2)}</td>
+        </tr>
+      `)
+      .join('');
+
+    const emailContent = `
+      <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2>Multiple Subscriptions Renewing Tomorrow</h2>
+        <p>The following subscriptions will renew tomorrow:</p>
+        
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <tr style="background-color: #f3f4f6;">
+            <th style="padding: 12px; text-align: left;">Service</th>
+            <th style="padding: 12px; text-align: left;">Amount</th>
+          </tr>
+          ${subscriptionsList}
+          <tr style="border-top: 2px solid #e5e7eb;">
+            <td style="padding: 12px; font-weight: bold;">Total</td>
+            <td style="padding: 12px; font-weight: bold;">$${totalAmount.toFixed(2)}</td>
+          </tr>
+        </table>
+        
+        <p>Log in to your Subtrackt dashboard to manage your subscriptions.</p>
+      </div>
+    `;
+
+    const response = await fetch(SENDGRID_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        personalizations: [{
+          to: [{ email: userEmail }]
+        }],
+        from: {
+          email: 'notifications@subtrackt.ai',
+          name: 'Subtrackt'
+        },
+        subject: `Multiple Subscriptions Renewing Tomorrow`,
+        content: [{
+          type: 'text/html',
+          value: emailContent
+        }]
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to send email through SendGrid');
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending combined renewal reminders:', error);
+    return { success: false, error };
+  }
+}

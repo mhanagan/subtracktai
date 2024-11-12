@@ -80,7 +80,7 @@ export function StatsCards({ totalMonthly, activeSubscriptions, subscriptions }:
                       <span className="text-xs text-red-500 font-medium">
                         ({Math.ceil(
                           (new Date(sub.renewal_date + 'T00:00:00Z').getTime() - 
-                           new Date(new Date().toISOString().split('T')[0] + 'T00:00:00Z').getTime()) /
+                           new Date().setHours(0, 0, 0, 0)) /
                           (1000 * 60 * 60 * 24)
                         )} days)
                       </span>
@@ -104,19 +104,15 @@ export function StatsCards({ totalMonthly, activeSubscriptions, subscriptions }:
 function getUpcomingRenewals(subscriptions: Subscription[]): Subscription[] {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayStr = today.toISOString().split('T')[0];
-  const sevenDaysFromNow = new Date(today);
-  sevenDaysFromNow.setDate(today.getDate() + 7);
 
   return subscriptions
     .filter(sub => {
       const renewalDate = new Date(sub.renewal_date + 'T00:00:00Z');
-      const todayDate = new Date(todayStr + 'T00:00:00Z');
       const daysUntil = Math.ceil(
-        (renewalDate.getTime() - todayDate.getTime()) /
+        (renewalDate.getTime() - today.getTime()) /
         (1000 * 60 * 60 * 24)
       );
-      return daysUntil > 0 && daysUntil <= 7;
+      return daysUntil >= 0 && daysUntil <= 7;
     })
     .sort((a, b) => 
       new Date(a.renewal_date + 'T00:00:00Z').getTime() - 

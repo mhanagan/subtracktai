@@ -161,6 +161,11 @@ export async function sendCombinedRenewalReminders(subscriptions: Subscription[]
 
     const emailContent = `
       <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="https://www.subtrackt.ai" target="_blank">
+            <img src="https://www.subtrackt.ai/subtrackt.jpg" alt="Subtrackt Logo" style="max-width: 200px; height: auto;">
+          </a>
+        </div>
         <h2>Multiple Subscriptions Renewing Tomorrow</h2>
         <p>The following subscriptions will renew tomorrow:</p>
         
@@ -176,7 +181,7 @@ export async function sendCombinedRenewalReminders(subscriptions: Subscription[]
           </tr>
         </table>
         
-        <p>Log in to your Subtrackt dashboard to manage your subscriptions.</p>
+        <p>Log in to your <a href="https://www.subtrackt.ai" style="color: #0066cc; text-decoration: none;">Subtrackt dashboard</a> to manage your subscriptions.</p>
       </div>
     `;
 
@@ -194,7 +199,7 @@ export async function sendCombinedRenewalReminders(subscriptions: Subscription[]
           email: 'notifications@subtrackt.ai',
           name: 'Subtrackt'
         },
-        subject: `Multiple Subscriptions Renewing Tomorrow`,
+        subject: `Subscriptions Renewing Tomorrow`,
         content: [{
           type: 'text/html',
           value: emailContent

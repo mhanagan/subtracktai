@@ -67,6 +67,19 @@ export async function sendSubscriptionReminder(subscription: Subscription, userE
 
 export async function sendWelcomeEmail(userEmail: string) {
   try {
+    const emailContent = `
+      <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="https://www.subtrackt.ai" target="_blank">
+            <img src="https://www.subtrackt.ai/subtrackt.jpg" alt="Subtrackt Logo" style="max-width: 200px; height: auto;">
+          </a>
+        </div>
+        <h2>Welcome to Subtrackt!</h2>
+        <p>Thank you for joining Subtrackt. We're excited to help you manage your subscriptions.</p>
+        <p>Get started by adding your first subscription in your <a href="https://www.subtrackt.ai" style="color: #0066cc; text-decoration: none;">dashboard</a>.</p>
+      </div>
+    `;
+
     const response = await fetch(SENDGRID_API_URL, {
       method: 'POST',
       headers: {
@@ -84,11 +97,7 @@ export async function sendWelcomeEmail(userEmail: string) {
         subject: 'Welcome to Subtrackt!',
         content: [{
           type: 'text/html',
-          value: `
-            <h2>Welcome to Subtrackt!</h2>
-            <p>Thank you for joining Subtrackt. We're excited to help you manage your subscriptions.</p>
-            <p>Get started by adding your first subscription in your dashboard.</p>
-          `
+          value: emailContent
         }]
       })
     });
@@ -166,7 +175,7 @@ export async function sendCombinedRenewalReminders(subscriptions: Subscription[]
             <img src="https://www.subtrackt.ai/subtrackt.jpg" alt="Subtrackt Logo" style="max-width: 200px; height: auto;">
           </a>
         </div>
-        <h2>Multiple Subscriptions Renewing Tomorrow</h2>
+        <h2>Subscriptions Renewing Tomorrow</h2>
         <p>The following subscriptions will renew tomorrow:</p>
         
         <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">

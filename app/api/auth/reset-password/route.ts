@@ -1,38 +1,60 @@
-import { NextResponse } from "next/server";
-import { sendPasswordResetEmail } from "@/lib/email";
+import { NextResponse } from 'next/server';
+import { createPool } from '@vercel/postgres';
+import bcrypt from 'bcryptjs';
+
+const pool = createPool({
+  connectionString: process.env.POSTGRES_PRISMA_URL
+});
 
 export async function POST(request: Request) {
   try {
-    const { email } = await request.json();
+    const { token, password } = await request.json();
 
-    if (!email) {
+    if (!token || !password) {
       return NextResponse.json(
-        { error: "Email is required" },
+        { error: 'Token and password are required' },
         { status: 400 }
       );
     }
 
-    // Generate a unique reset token (in a real app, save this to the database)
-    const resetToken = Math.random().toString(36).substring(2, 15);
+    // Verify token and get user email
+    const { rows: tokenRows } = await pool.query(
+      'SELECT identifier FROM verification_tokens WHERE token = $1 AND expires > NOW()',
+      [token]
+    );
 
-    // Send the password reset email
-    const result = await sendPasswordResetEmail(email, resetToken);
-
-    if (!result.success) {
+    if (tokenRows.length === 0) {
       return NextResponse.json(
-        { error: "Failed to send reset email" },
-        { status: 500 }
+        { error: 'Invalid or expired token' },
+        { status: 400 }
       );
     }
 
+    const userEmail = tokenRows[0].identifier;
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Update user's password
+    await pool.query(
+      'UPDATE users SET password = $1 WHERE email = $2',
+      [hashedPassword, userEmail]
+    );
+
+    // Delete used token
+    await pool.query(
+      'DELETE FROM verification_tokens WHERE token = $1',
+      [token]
+    );
+
     return NextResponse.json({
       success: true,
-      message: "Password reset email sent",
+      message: 'Password reset successfully'
     });
   } catch (error) {
-    console.error("Error in reset password endpoint:", error);
+    console.error('Password reset error:', error);
     return NextResponse.json(
-      { error: "Internal server error" },
+      { error: 'Failed to reset password' },
       { status: 500 }
     );
   }

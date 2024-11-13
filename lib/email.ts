@@ -115,14 +115,14 @@ export async function sendWelcomeEmail(userEmail: string) {
 
 export async function sendPasswordResetEmail(userEmail: string, resetToken: string) {
   try {
-    const domain = process.env.NEXTAUTH_URL || 'https://subtracktai.vercel.app';
+    const domain = process.env.NEXTAUTH_URL || 'https://subtrackt.ai';
     const resetUrl = `${domain}/auth/reset-password/${resetToken}`;
 
     const emailContent = `
       <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 24px;">
           <a href="https://www.subtrackt.ai" target="_blank">
-            <img src="https://www.subtracktai.vercel.app/subtrackt.jpg" alt="Subtrackt Logo" style="max-width: 200px; height: auto;">
+            <img src="https://www.subtrackt.ai/subtrackt.jpg" alt="Subtrackt Logo" style="max-width: 200px; height: auto;">
           </a>
         </div>
         <h2>Reset Your Password</h2>

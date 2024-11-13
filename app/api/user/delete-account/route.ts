@@ -9,16 +9,25 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Delete all subscriptions for the user
-    const { rowCount } = await sql`
+    // First delete all subscriptions for the user
+    await sql`
       DELETE FROM subscriptions
       WHERE user_email = ${userEmail}
     `;
 
+    // Then delete the user from the users table
+    const { rowCount } = await sql`
+      DELETE FROM users
+      WHERE email = ${userEmail}
+    `;
+
+    if (rowCount === 0) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
     return NextResponse.json({ 
       success: true,
-      message: 'Account deleted successfully',
-      deletedRows: rowCount
+      message: 'Account and all associated data deleted successfully'
     });
   } catch (error) {
     console.error('Error deleting account:', error);

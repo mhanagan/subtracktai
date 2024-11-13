@@ -67,30 +67,51 @@ export async function sendSubscriptionReminder(subscription: Subscription, userE
 
 export async function sendWelcomeEmail(userEmail: string) {
   try {
+    if (!SENDGRID_API_KEY) {
+      throw new Error('SendGrid API key is not configured');
+    }
+
     const emailContent = `
       <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="https://www.subtrackt.ai" target="_blank">
+            <img src="https://www.subtrackt.ai/subtrackt.jpg" alt="Subtrackt Logo" style="max-width: 200px; height: auto;">
+          </a>
+        </div>
         <h2>Welcome to Subtrackt!</h2>
         <p>Thank you for joining Subtrackt. We're excited to help you manage your subscriptions.</p>
-        <p>Get started by adding your first subscription in your dashboard.</p>
+        <p>Get started by adding your first subscription in your <a href="https://www.subtrackt.ai/dashboard" style="color: #0066cc; text-decoration: none;">dashboard</a>.</p>
       </div>
     `;
 
-    const response = await fetch('/api/send-email', {
+    const response = await fetch(SENDGRID_API_URL, {
       method: 'POST',
       headers: {
+        'Authorization': `Bearer ${SENDGRID_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        to: userEmail,
+        personalizations: [{
+          to: [{ email: userEmail }]
+        }],
+        from: {
+          email: 'notifications@subtrackt.ai',
+          name: 'Subtrackt'
+        },
         subject: 'Welcome to Subtrackt!',
-        html: emailContent,
-      }),
+        content: [{
+          type: 'text/html',
+          value: emailContent
+        }]
+      })
     });
 
     if (!response.ok) {
-      throw new Error('Failed to send welcome email');
+      const error = await response.json();
+      throw new Error(error.message || 'Failed to send welcome email');
     }
 
+    console.log('Welcome email sent successfully to:', userEmail);
     return { success: true };
   } catch (error) {
     console.error('Error sending welcome email:', error);

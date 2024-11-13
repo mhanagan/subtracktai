@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
@@ -51,6 +52,44 @@ export default function LoginPage() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!email) {
+      toast({
+        title: 'Email Required',
+        description: 'Please enter your email address first.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsResetting(true);
+    try {
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send reset email');
+      }
+
+      toast({
+        title: 'Reset Email Sent',
+        description: 'Check your email for password reset instructions.',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send reset email. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -101,9 +140,14 @@ export default function LoginPage() {
                   Register
                 </Link>
               </p>
-              <Link href="/auth/forgot-password" className="text-primary hover:underline block">
-                Forgot password?
-              </Link>
+              <Button
+                variant="link"
+                className="text-primary hover:underline p-0 h-auto font-normal"
+                onClick={handleResetPassword}
+                disabled={isResetting}
+              >
+                {isResetting ? 'Sending reset email...' : 'Forgot password?'}
+              </Button>
             </div>
           </CardFooter>
         </form>

@@ -4,9 +4,11 @@ import { sendSubscriptionReminder } from '@/lib/email';
 
 export async function GET(request: Request) {
   try {
-    // Verify the request is from Vercel Cron
-    const authHeader = request.headers.get('authorization');
-    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+    // Verify the request using a query parameter
+    const { searchParams } = new URL(request.url);
+    const cronSecret = searchParams.get('cronSecret');
+    
+    if (cronSecret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

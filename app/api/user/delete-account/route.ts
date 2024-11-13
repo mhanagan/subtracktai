@@ -6,34 +6,33 @@ export async function DELETE(request: Request) {
     const userEmail = request.headers.get('user-email');
 
     if (!userEmail) {
+      console.error('No user email provided');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Use a transaction to ensure both operations succeed or fail together
-    await sql.begin(async (sql) => {
-      // First delete all subscriptions for the user
-      await sql`
-        DELETE FROM subscriptions
-        WHERE user_email = ${userEmail}
-      `;
+    console.log('Attempting to delete account for:', userEmail);
 
-      // Then delete the user's auth record
-      await sql`
-        DELETE FROM user_auth
-        WHERE email = ${userEmail}
-      `;
-    });
+    // Delete all subscriptions for the user
+    const deleteSubscriptionsResult = await sql`
+      DELETE FROM subscriptions
+      WHERE user_email = ${userEmail}
+      RETURNING id
+    `;
+
+    console.log('Deleted subscriptions:', deleteSubscriptionsResult.rows.length);
 
     return NextResponse.json({ 
       success: true,
-      message: 'Account and all associated data deleted successfully'
+      message: 'Account data deleted successfully',
+      deletedSubscriptions: deleteSubscriptionsResult.rows.length
     });
 
   } catch (error) {
-    console.error('Error deleting account:', error);
+    console.error('Error in delete-account:', error);
     return NextResponse.json({ 
       error: 'Failed to delete account',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error instanceof Error ? error.message : 'Unknown error',
+      timestamp: new Date().toISOString()
     }, { status: 500 });
   }
 } 

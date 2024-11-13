@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createPool } from '@vercel/postgres';
 import bcrypt from 'bcryptjs';
+import { sendWelcomeEmail } from '@/lib/email';
 
 // Create a connection pool
 const pool = createPool({
@@ -40,7 +41,16 @@ export async function POST(request: Request) {
       [email, hashedPassword]
     );
 
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(email);
+    } catch (emailError) {
+      console.error('Failed to send welcome email:', emailError);
+      // Continue with registration even if email fails
+    }
+
     return NextResponse.json({
+      success: true,
       user: {
         id: rows[0].id,
         email: rows[0].email

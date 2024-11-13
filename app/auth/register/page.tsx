@@ -21,8 +21,6 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      console.log('Starting registration process...');
-      
       // Register the user
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -30,9 +28,7 @@ export default function RegisterPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      console.log('Registration response status:', response.status);
       const data = await response.json();
-      console.log('Registration response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to register');
@@ -44,35 +40,27 @@ export default function RegisterPage() {
         description: 'Welcome to Subtrackt!',
       });
 
-      console.log('Attempting sign in...');
-      // Sign in the user after successful registration
+      // Sign in the user
       const result = await signIn('credentials', {
         email,
         password,
         redirect: false,
-        callbackUrl: '/dashboard'
       });
-
-      console.log('Sign in result:', result);
 
       if (result?.error) {
         throw new Error(result.error);
       }
 
-      if (result?.url) {
-        console.log('Redirecting to:', result.url);
-        router.push(result.url);
-      } else {
-        console.log('Fallback redirect to dashboard');
-        router.push('/dashboard');
-      }
-      
-      router.refresh();
+      // Store email in localStorage
+      localStorage.setItem('userEmail', email);
+
+      // Redirect to dashboard
+      router.push('/dashboard');
     } catch (error) {
-      console.error('Registration/login error:', error);
+      console.error('Registration error:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Registration failed',
+        description: error instanceof Error ? error.message : 'Failed to register',
         variant: 'destructive',
       });
     } finally {

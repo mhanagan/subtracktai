@@ -1,18 +1,38 @@
 "use client";
 
+import { signOut } from "next-auth/react";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ManageAccountDialog } from "@/components/dashboard/manage-account-dialog";
 import DarkModeToggle from '@/components/DarkModeToggle';
+import { useRouter } from 'next/navigation';
+import { useToast } from "@/components/ui/use-toast";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const handleLogout = () => {
-    localStorage.removeItem('userEmail');
-    window.location.href = '/auth/login';
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    try {
+      localStorage.removeItem('userEmail');
+      await signOut({ redirect: false });
+      toast({
+        title: "Logged out successfully",
+        description: "You have been logged out of your account.",
+      });
+      router.push('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') || '' : '';

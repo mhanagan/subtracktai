@@ -14,6 +14,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { Subscription } from '@/types/subscription';
 import { addMonths, parseISO, isSameDay } from 'date-fns';
 import Image from 'next/image';
+import { ManageAccountDialog } from "@/components/dashboard/manage-account-dialog";
 
 function AddSubscriptionButton({ onClick }: { onClick: () => void }) {
   return (
@@ -189,6 +190,9 @@ export default function DashboardPage() {
     try {
       const method = selectedSubscription ? 'PUT' : 'POST';
       
+      // Get user's timezone
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      
       // Format the subscription data to match the API expectations
       const formattedSubscription = {
         id: subscription.id,
@@ -197,7 +201,8 @@ export default function DashboardPage() {
         price: subscription.price,
         renewalDate: subscription.renewal_date,
         reminderEnabled: subscription.reminder_enabled,
-        userEmail
+        userEmail,
+        timezone: userTimeZone  // Add the timezone field
       };
 
       console.log('Sending subscription data:', formattedSubscription);
@@ -309,26 +314,7 @@ export default function DashboardPage() {
   return (
     <ErrorBoundary>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-        <div className="container mx-auto px-4 py-16">
-          <header className="flex justify-between items-center mb-8">
-            <h1 className="text-4xl md:text-6xl font-bold">
-              Subtrackt Dashboard
-            </h1>
-            <div className="flex flex-col items-end gap-2">
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleLogout}
-                  size="sm"
-                >
-                  <LogOut className="mr-1 h-3 w-3" />
-                  Logout
-                </Button>
-                <DarkModeToggle />
-              </div>
-            </div>
-          </header>
-
+        <div className="container mx-auto px-4 py-8">
           <StatsCards
             totalMonthly={totalMonthly}
             activeSubscriptions={activeSubscriptions}

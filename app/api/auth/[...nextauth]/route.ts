@@ -63,6 +63,7 @@ const handler = NextAuth({
   pages: {
     signIn: '/auth/login',
     error: '/auth/error',
+    resetPassword: '/auth/reset-password',
   },
   session: {
     strategy: "jwt",

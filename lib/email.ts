@@ -113,10 +113,32 @@ export async function sendWelcomeEmail(userEmail: string) {
   }
 }
 
-export async function sendPasswordResetEmail(email: string, resetToken: string) {
+export async function sendPasswordResetEmail(userEmail: string, resetToken: string) {
   try {
-    const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password/${resetToken}`;
-    
+    const domain = process.env.NEXTAUTH_URL || 'https://subtracktai.vercel.app';
+    const resetUrl = `${domain}/auth/reset-password/${resetToken}`;
+
+    const emailContent = `
+      <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="text-align: center; margin-bottom: 24px;">
+          <a href="https://www.subtrackt.ai" target="_blank">
+            <img src="https://www.subtracktai.vercel.app/subtrackt.jpg" alt="Subtrackt Logo" style="max-width: 200px; height: auto;">
+          </a>
+        </div>
+        <h2>Reset Your Password</h2>
+        <p>You requested to reset your password. Click the link below to set a new password:</p>
+        <p style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" 
+             style="background-color: #0066cc; color: white; padding: 12px 24px; 
+                    text-decoration: none; border-radius: 6px; display: inline-block;">
+            Reset Password
+          </a>
+        </p>
+        <p>If you didn't request this, you can safely ignore this email.</p>
+        <p>This link will expire in 1 hour.</p>
+      </div>
+    `;
+
     const response = await fetch(SENDGRID_API_URL, {
       method: 'POST',
       headers: {
@@ -125,7 +147,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
       },
       body: JSON.stringify({
         personalizations: [{
-          to: [{ email }]
+          to: [{ email: userEmail }]
         }],
         from: {
           email: 'notifications@subtrackt.ai',
@@ -134,12 +156,7 @@ export async function sendPasswordResetEmail(email: string, resetToken: string) 
         subject: 'Reset Your Subtrackt Password',
         content: [{
           type: 'text/html',
-          value: `
-            <h2>Reset Your Password</h2>
-            <p>You requested to reset your password. Click the link below to set a new password:</p>
-            <p><a href="${resetLink}">Reset Password</a></p>
-            <p>If you didn't request this, you can safely ignore this email.</p>
-          `
+          value: emailContent
         }]
       })
     });

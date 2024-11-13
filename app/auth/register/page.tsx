@@ -1,160 +1,127 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import Link from "next/link";
-import { UserPlus, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { sendWelcomeEmail } from "@/lib/email";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardHeader, CardContent, CardFooter } from '@/components/ui/card';
+import Link from 'next/link';
+import { useToast } from '@/components/ui/use-toast';
+import { signIn } from 'next-auth/react';
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [error, setError] = useState<string>("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  const validateForm = () => {
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError("All fields are required");
-      return false;
-    }
-
-    if (!formData.email.includes("@")) {
-      setError("Please enter a valid email address");
-      return false;
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters long");
-      return false;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return false;
-    }
-
-    return true;
-  };
+  const router = useRouter();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    
-    if (!validateForm()) {
-      return;
-    }
-
     setIsLoading(true);
 
     try {
-      // Here we'll add the actual registration API call later
-      // For now, simulate an API call with a delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log('Starting registration process...');
+      
+      // Register the user
+      const response = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-      // Store user email in localStorage
-      localStorage.setItem('userEmail', formData.email);
+      console.log('Registration response status:', response.status);
+      const data = await response.json();
+      console.log('Registration response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to register');
+      }
+
+      // Show success toast
+      toast({
+        title: 'Registration successful',
+        description: 'Welcome to Subtrackt!',
+      });
+
+      console.log('Attempting sign in...');
+      // Sign in the user after successful registration
+      const result = await signIn('credentials', {
+        email,
+        password,
+        redirect: false,
+        callbackUrl: '/dashboard'
+      });
+
+      console.log('Sign in result:', result);
+
+      if (result?.error) {
+        throw new Error(result.error);
+      }
+
+      if (result?.url) {
+        console.log('Redirecting to:', result.url);
+        router.push(result.url);
+      } else {
+        console.log('Fallback redirect to dashboard');
+        router.push('/dashboard');
+      }
       
-      // Send welcome email
-      await sendWelcomeEmail(formData.email, formData.name);
-      
-      // Redirect to dashboard after successful registration
-      router.push("/dashboard");
-    } catch (err) {
-      setError("An error occurred during registration. Please try again.");
+      router.refresh();
+    } catch (error) {
+      console.error('Registration/login error:', error);
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Registration failed',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <div className="flex items-center justify-center mb-4">
-            <UserPlus className="h-10 w-10 text-primary" />
-          </div>
-          <CardTitle className="text-2xl text-center">Create an Account</CardTitle>
-          <CardDescription className="text-center">
-            Enter your details to create your account
-          </CardDescription>
+          <h2 className="text-2xl font-bold text-center">Create an Account</h2>
+          <p className="text-muted-foreground text-center">
+            Enter your email and password to register
+          </p>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
               <Input
-                id="name"
-                type="text"
-                placeholder="Your name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
                 type="email"
-                placeholder="name@example.com"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
               <Input
-                id="password"
                 type="password"
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={formData.confirmPassword}
-                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col space-y-4">
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Account...
-                </>
-              ) : (
-                "Create Account"
-              )}
+            <Button 
+              type="submit" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Creating account...' : 'Create account'}
             </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{" "}
+            <p className="text-sm text-center">
+              Already have an account?{' '}
               <Link href="/auth/login" className="text-primary hover:underline">
                 Sign in
               </Link>

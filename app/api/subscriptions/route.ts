@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
-import { sql } from '@vercel/postgres';
+import { createPool } from '@vercel/postgres';
+
+const pool = createPool({
+  connectionString: process.env.POSTGRES_PRISMA_URL
+});
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -15,8 +19,8 @@ export async function GET(request: Request) {
 
     console.log('Fetching subscriptions for:', userEmail);
 
-    const { rows } = await sql`
-      SELECT 
+    const { rows } = await pool.query(
+      `SELECT 
         id,
         name,
         category,
@@ -25,9 +29,10 @@ export async function GET(request: Request) {
         reminder_enabled,
         user_email
       FROM subscriptions 
-      WHERE user_email = ${userEmail}
-      ORDER BY name ASC
-    `;
+      WHERE user_email = $1
+      ORDER BY name ASC`,
+      [userEmail]
+    );
 
     console.log('Fetched subscriptions:', rows);
     return NextResponse.json(rows);
@@ -59,18 +64,8 @@ export async function POST(request: Request) {
     // Ensure the date is in the correct format (YYYY-MM-DD)
     const formattedDate = renewalDate.split('T')[0];
 
-    const data = {
-      name,
-      category,
-      price,
-      renewal_date: formattedDate,
-      reminder_enabled: reminderEnabled,
-      user_email: userEmail,
-      timezone
-    };
-
-    const { rows } = await sql`
-      INSERT INTO subscriptions (
+    const { rows } = await pool.query(
+      `INSERT INTO subscriptions (
         name,
         category,
         price,
@@ -78,15 +73,7 @@ export async function POST(request: Request) {
         reminder_enabled,
         user_email,
         timezone
-      ) VALUES (
-        ${data.name},
-        ${data.category},
-        ${data.price}::decimal,
-        ${data.renewal_date}::date AT TIME ZONE 'UTC',
-        ${data.reminder_enabled},
-        ${data.user_email},
-        ${data.timezone}
-      )
+      ) VALUES ($1, $2, $3::decimal, $4::date AT TIME ZONE 'UTC', $5, $6, $7)
       RETURNING 
         id,
         name,
@@ -95,8 +82,9 @@ export async function POST(request: Request) {
         (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
         reminder_enabled,
         user_email,
-        timezone
-    `;
+        timezone`,
+      [name, category, price, formattedDate, reminderEnabled, userEmail, timezone]
+    );
 
     console.log('Created subscription:', rows[0]);
     return NextResponse.json(rows[0]);
@@ -120,25 +108,15 @@ export async function PUT(request: Request) {
       userEmail
     });
 
-    const data = {
-      name: name,
-      category: category,
-      price: price,
-      renewal_date: renewalDate,
-      reminder_enabled: reminderEnabled,
-      user_email: userEmail,
-      timezone: timezone || 'America/New_York'
-    };
-
-    const { rows } = await sql`
-      UPDATE subscriptions 
+    const { rows } = await pool.query(
+      `UPDATE subscriptions 
       SET 
-        name = ${data.name},
-        category = ${data.category},
-        price = ${data.price}::decimal,
-        renewal_date = ${data.renewal_date}::date AT TIME ZONE 'UTC',
-        reminder_enabled = ${data.reminder_enabled}
-      WHERE id = ${id} AND user_email = ${data.user_email}
+        name = $1,
+        category = $2,
+        price = $3::decimal,
+        renewal_date = $4::date AT TIME ZONE 'UTC',
+        reminder_enabled = $5
+      WHERE id = $6 AND user_email = $7
       RETURNING 
         id,
         name,
@@ -147,8 +125,9 @@ export async function PUT(request: Request) {
         (renewal_date AT TIME ZONE 'UTC')::date::text as renewal_date,
         reminder_enabled,
         user_email,
-        timezone
-    `;
+        timezone`,
+      [name, category, price, renewalDate, reminderEnabled, id, userEmail]
+    );
 
     if (rows.length === 0) {
       return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
@@ -169,34 +148,21 @@ export async function DELETE(request: Request) {
     const userEmail = request.headers.get('user-email');
 
     if (!id || !userEmail) {
-      return NextResponse.json(
-        { error: 'Missing required parameters' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 });
     }
 
-    console.log('Deleting subscription:', { id, userEmail });
-
-    const { rows } = await sql`
-      DELETE FROM subscriptions 
-      WHERE id = ${parseInt(id)} AND user_email = ${userEmail}
-      RETURNING *
-    `;
+    const { rows } = await pool.query(
+      'DELETE FROM subscriptions WHERE id = $1 AND user_email = $2 RETURNING id',
+      [id, userEmail]
+    );
 
     if (rows.length === 0) {
-      return NextResponse.json(
-        { error: 'Subscription not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Subscription not found' }, { status: 404 });
     }
 
-    console.log('Successfully deleted subscription:', rows[0]);
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting subscription:', error);
-    return NextResponse.json(
-      { error: 'Failed to delete subscription' },
-      { status: 500 }
-    );
+    console.error('Database error:', error);
+    return NextResponse.json({ error: 'Failed to delete subscription' }, { status: 500 });
   }
 } 

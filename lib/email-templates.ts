@@ -98,5 +98,29 @@ export const emailTemplates = {
         <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTrackt. All rights reserved.</p>
       </div>
     </div>
+  `,
+
+  accountDeletion: (email: string) => `
+    <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+      <div style="text-align: center; margin-bottom: 32px;">
+        <h1 style="color: #1a1a1a; margin-bottom: 8px;">Account Deleted Successfully</h1>
+        <p style="color: #666; font-size: 16px;">Thank you for using Subtrackt</p>
+      </div>
+
+      <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+        <p style="margin-bottom: 16px; line-height: 1.5;">
+          We're sorry to see you go. Your account and all associated data have been successfully deleted from our systems.
+        </p>
+        
+        <p style="margin-bottom: 16px; line-height: 1.5;">
+          If you change your mind, you're always welcome to create a new account and start tracking your subscriptions again.
+        </p>
+      </div>
+
+      <div style="text-align: center; color: #666; font-size: 14px;">
+        <p>Thank you for being a part of Subtrackt.</p>
+        <p style="margin-top: 8px;">© ${new Date().getFullYear()} Subtrackt. All rights reserved.</p>
+      </div>
+    </div>
   `
 };

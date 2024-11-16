@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
+import { emailTemplates } from '@/lib/email-templates';
+
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const SENDGRID_API_URL = 'https://api.sendgrid.com/v3/mail/send';
 
 export async function DELETE(request: Request) {
   try {
@@ -31,6 +35,38 @@ export async function DELETE(request: Request) {
 
     if (deleteUserResult.rows.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Send confirmation email
+    try {
+      if (!SENDGRID_API_KEY) {
+        throw new Error('SendGrid API key is not configured');
+      }
+
+      await fetch(SENDGRID_API_URL, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${SENDGRID_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          personalizations: [{
+            to: [{ email: userEmail }]
+          }],
+          from: {
+            email: 'notifications@subtrackt.ai',
+            name: 'Subtrackt'
+          },
+          subject: 'Account Deleted Successfully - Subtrackt',
+          content: [{
+            type: 'text/html',
+            value: emailTemplates.accountDeletion(userEmail)
+          }]
+        })
+      });
+    } catch (emailError) {
+      console.error('Failed to send deletion confirmation email:', emailError);
+      // Continue with the response even if email fails
     }
 
     return NextResponse.json({ 

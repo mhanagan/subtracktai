@@ -128,5 +128,69 @@ export const emailTemplates = {
         <p style="margin-top: 8px;">© ${new Date().getFullYear()} Subtrackt. All rights reserved.</p>
       </div>
     </div>
-  `
+  `,
+
+  combinedRenewalReminder: (subscriptions: any[]) => {
+    const totalAmount = subscriptions.reduce((sum, sub) => 
+      sum + parseFloat(sub.price_decimal || sub.price || 0), 0
+    );
+
+    const subscriptionsList = subscriptions
+      .map(sub => {
+        const price = parseFloat(sub.price_decimal || sub.price || 0);
+        return `
+          <tr>
+            <td style="padding: 16px; border-bottom: 1px solid #e5e7eb;">
+              <div style="font-weight: 500;">${sub.name}</div>
+              <div style="color: #666; font-size: 14px; margin-top: 4px;">${sub.category || 'Uncategorized'}</div>
+            </td>
+            <td style="padding: 16px; border-bottom: 1px solid #e5e7eb; text-align: right;">
+              $${price.toFixed(2)}
+            </td>
+          </tr>
+        `;
+      })
+      .join('');
+
+    return `
+      <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
+        <div style="text-align: center; margin-bottom: 32px;">
+          <h1 style="color: #1a1a1a; margin-bottom: 8px;">Subscription Renewals Tomorrow</h1>
+          <p style="color: #666; font-size: 16px;">You have ${subscriptions.length} subscription${subscriptions.length > 1 ? 's' : ''} renewing tomorrow</p>
+        </div>
+
+        <div style="background-color: #f9fafb; border-radius: 8px; padding: 24px; margin-bottom: 32px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="border-bottom: 2px solid #e5e7eb;">
+                <th style="padding: 12px 16px; text-align: left; color: #666;">Service</th>
+                <th style="padding: 12px 16px; text-align: right; color: #666;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${subscriptionsList}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td style="padding: 16px; font-weight: 600;">Total</td>
+                <td style="padding: 16px; font-weight: 600; text-align: right;">$${totalAmount.toFixed(2)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <div style="text-align: center;">
+          <a href="https://subtrackt.ai/dashboard" 
+             style="display: inline-block; background-color: #000; color: #fff; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500;">
+            View Subscriptions
+          </a>
+        </div>
+
+        <div style="text-align: center; color: #666; font-size: 14px; margin-top: 32px;">
+          <p>To manage your subscriptions, log in to your Subtrackt dashboard.</p>
+          <p style="margin-top: 8px;">© ${new Date().getFullYear()} Subtrackt. All rights reserved.</p>
+        </div>
+      </div>
+    `;
+  }
 };

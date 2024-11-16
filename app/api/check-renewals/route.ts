@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
 import { sql } from '@vercel/postgres';
-import { sendSubscriptionReminder } from '@/lib/email';
+import { sendCombinedRenewalReminders } from '@/lib/email';
+
+interface Subscription {
+  id: number;
+  name: string;
+  category: string;
+  price: number;
+  price_decimal?: string;
+  renewal_date: string;
+  user_email: string;
+}
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -32,31 +42,43 @@ export async function GET(request: Request) {
       WHERE 
         DATE(renewal_date) = ${tomorrowStr}
         AND reminder_enabled = true
+      ORDER BY user_email, name
     `;
+
+    // Group subscriptions by user email
+    const subscriptionsByUser = subscriptions.reduce((acc, sub) => {
+      const formattedSub = {
+        ...sub,
+        price: parseFloat(sub.price_decimal || sub.price || 0)
+      };
+      
+      if (!acc[sub.user_email]) {
+        acc[sub.user_email] = [];
+      }
+      acc[sub.user_email].push(formattedSub);
+      return acc;
+    }, {} as Record<string, Subscription[]>);
 
     const remindersSent = [];
     const errors = [];
 
-    for (const subscription of subscriptions) {
+    // Send one email per user with all their renewals
+    for (const [userEmail, userSubscriptions] of Object.entries(subscriptionsByUser)) {
       try {
-        // Ensure price is properly formatted
-        const formattedSubscription = {
-          ...subscription,
-          price: parseFloat(subscription.price_decimal || subscription.price || 0)
-        };
-
-        await sendSubscriptionReminder(formattedSubscription, subscription.user_email);
+        await sendCombinedRenewalReminders(userSubscriptions, userEmail);
         
         remindersSent.push({
-          id: subscription.id,
-          name: subscription.name,
-          email: subscription.user_email
+          email: userEmail,
+          subscriptionCount: userSubscriptions.length,
+          subscriptions: userSubscriptions.map((sub: Subscription) => ({
+            id: sub.id,
+            name: sub.name
+          }))
         });
       } catch (error) {
-        console.error('Error sending reminder for subscription:', subscription.id, error);
+        console.error('Error sending combined reminders for user:', userEmail, error);
         errors.push({
-          id: subscription.id,
-          name: subscription.name,
+          email: userEmail,
           error: error instanceof Error ? error.message : 'Failed to send reminder'
         });
       }

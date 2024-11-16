@@ -38,9 +38,9 @@ export default function DashboardLayout({
   const userEmail = typeof window !== 'undefined' ? localStorage.getItem('userEmail') || '' : '';
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="container flex h-16 items-center justify-between px-4">
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="border-b w-full">
+        <div className="max-w-7xl mx-auto w-full flex h-16 items-center justify-between px-4">
           <div className="text-lg font-bold">Subtrackt Dashboard</div>
           <div className="flex items-center gap-2">
             <ManageAccountDialog userEmail={userEmail} onLogout={handleLogout} />
@@ -52,7 +52,11 @@ export default function DashboardLayout({
           </div>
         </div>
       </header>
-      <main className="container py-6 px-4">{children}</main>
+      <main className="flex-grow flex flex-col items-center w-full">
+        <div className="max-w-7xl w-full mx-auto px-4 py-6">
+          {children}
+        </div>
+      </main>
     </div>
   );
 } 

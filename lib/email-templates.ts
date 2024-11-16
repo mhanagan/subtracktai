@@ -1,5 +1,10 @@
 export const emailTemplates = {
-  subscriptionReminder: (subscription: any) => `
+  subscriptionReminder: (subscription: any) => {
+    const formattedPrice = typeof subscription.price === 'number' 
+      ? subscription.price.toFixed(2)
+      : parseFloat(subscription.price || 0).toFixed(2);
+
+    return `
     <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">
       <div style="text-align: center; margin-bottom: 32px;">
         <h1 style="color: #1a1a1a; margin-bottom: 8px;">Subscription Renewal Reminder</h1>
@@ -10,15 +15,15 @@ export const emailTemplates = {
         <h2 style="color: #1a1a1a; font-size: 20px; margin-bottom: 16px;">Subscription Details</h2>
         <div style="margin-bottom: 16px;">
           <p style="margin: 0; color: #666;">Service</p>
-          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 500;">${subscription.name}</p>
+          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 500;">${subscription.name || 'N/A'}</p>
         </div>
         <div style="margin-bottom: 16px;">
           <p style="margin: 0; color: #666;">Category</p>
-          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 500;">${subscription.category}</p>
+          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 500;">${subscription.category || 'N/A'}</p>
         </div>
         <div style="margin-bottom: 16px;">
           <p style="margin: 0; color: #666;">Amount</p>
-          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 500;">$${subscription.price.toFixed(2)}</p>
+          <p style="margin: 4px 0 0; font-size: 16px; font-weight: 500;">$${formattedPrice}</p>
         </div>
         <div>
           <p style="margin: 0; color: #666;">Renewal Date</p>
@@ -31,7 +36,8 @@ export const emailTemplates = {
         <p style="margin-top: 8px;">© ${new Date().getFullYear()} SubTrackt. All rights reserved.</p>
       </div>
     </div>
-  `,
+  `;
+  },
 
   passwordReset: (resetLink: string) => `
     <div style="font-family: system-ui, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #333;">

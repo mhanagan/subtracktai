@@ -6,12 +6,8 @@ async function testCron() {
       throw new Error('CRON_SECRET is not set in environment variables');
     }
 
-    const response = await fetch('https://subtracktai.vercel.app/api/check-renewals', {
-      headers: {
-        'Authorization': `Bearer ${process.env.CRON_SECRET}`
-      }
-    });
-    
+    const response = await fetch(`https://subtracktai.vercel.app/api/check-renewals?cronSecret=${process.env.CRON_SECRET}`);
+
     if (!response.ok) {
       const text = await response.text();
       console.error('Error response:', {

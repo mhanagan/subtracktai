@@ -17,8 +17,15 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
+    console.log('Cron job triggered at:', new Date().toISOString());
     const { searchParams } = new URL(request.url);
     const cronSecret = searchParams.get('cronSecret');
+
+    console.log('Checking cron secret:', {
+      provided: cronSecret?.substring(0, 4) + '...',
+      expected: process.env.CRON_SECRET?.substring(0, 4) + '...',
+      matches: cronSecret === process.env.CRON_SECRET
+    });
 
     if (cronSecret !== process.env.CRON_SECRET) {
       console.error('Invalid cron secret');
@@ -44,6 +51,8 @@ export async function GET(request: Request) {
         AND reminder_enabled = true
       ORDER BY user_email, name
     `;
+
+    console.log('Subscriptions found:', subscriptions.length);
 
     // Group subscriptions by user email
     const subscriptionsByUser = subscriptions.reduce((acc, sub) => {
@@ -84,6 +93,8 @@ export async function GET(request: Request) {
       }
     }
 
+    console.log('Reminders sent:', remindersSent.length);
+
     return NextResponse.json({
       success: true,
       remindersSent,
@@ -92,10 +103,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Error in check-renewals:', error);
-    return NextResponse.json({ 
-      error: 'Failed to process renewals',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 });
+    console.error('Detailed cron error:', error);
+    throw error;
   }
 }

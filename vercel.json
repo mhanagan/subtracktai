@@ -1,8 +1,9 @@
 {
   "crons": [
     {
-      "path": "/api/check-renewals?cronSecret=${CRON_SECRET}",
-      "schedule": "*/5 * * * *"
+      "path": "/api/check-renewals/?cronSecret=${CRON_SECRET}",
+      "schedule": "*/5 * * * *",
+      "httpMethod": "GET"
     }
   ],
   "trailingSlash": true

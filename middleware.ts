@@ -8,7 +8,11 @@ export function middleware(request: NextRequest) {
   // Allow both with and without trailing slash for cron job
   if (request.nextUrl.pathname === '/api/check-renewals' || 
       request.nextUrl.pathname === '/api/check-renewals/') {
-    console.log('Allowing check-renewals access');
+    const cronSecret = request.nextUrl.searchParams.get('cronSecret');
+    console.log('Cron request received:', {
+      path: request.nextUrl.pathname,
+      hasCronSecret: !!cronSecret
+    });
     return NextResponse.next();
   }
 

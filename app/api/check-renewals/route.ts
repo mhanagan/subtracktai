@@ -17,7 +17,10 @@ export const revalidate = 0;
 
 export async function GET(request: Request) {
   try {
-    console.log('Cron job triggered at:', new Date().toISOString());
+    const timestamp = new Date().toISOString();
+    console.log('=== CRON JOB EXECUTION START ===');
+    console.log('Timestamp:', timestamp);
+    console.log('URL:', request.url);
     const { searchParams } = new URL(request.url);
     const cronSecret = searchParams.get('cronSecret');
 
@@ -103,7 +106,11 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Detailed cron error:', error);
+    console.error('=== CRON JOB EXECUTION ERROR ===');
+    console.error('Timestamp:', new Date().toISOString());
+    console.error('Error details:', error);
     throw error;
+  } finally {
+    console.log('=== CRON JOB EXECUTION END ===');
   }
 }

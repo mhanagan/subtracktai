@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/check-renewals/?cronSecret=${CRON_SECRET}",
+      "path": "/api/check-renewals/?cronSecret=1972150912542",
       "schedule": "*/5 * * * *"
     }
   ],

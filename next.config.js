@@ -59,6 +59,14 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/check-renewals',
+        destination: 'https://www.subtrackt.ai/api/check-renewals'
+      }
+    ];
+  }
 };
 
 module.exports = nextConfig;

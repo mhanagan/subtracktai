@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   // Log the request for debugging
   console.log('Middleware hit:', request.nextUrl.pathname);
   
-  // Allow both with and without trailing slash
+  // Allow both with and without trailing slash for cron job
   if (request.nextUrl.pathname === '/api/check-renewals' || 
       request.nextUrl.pathname === '/api/check-renewals/') {
     console.log('Allowing check-renewals access');
@@ -18,6 +18,7 @@ export function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
+    '/api/check-renewals/:path*',
     '/dashboard/:path*',
   ],
 }; 

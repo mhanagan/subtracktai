@@ -7,6 +7,7 @@ import { ManageAccountDialog } from "@/components/dashboard/manage-account-dialo
 import DarkModeToggle from '@/components/DarkModeToggle';
 import { useRouter } from 'next/navigation';
 import { useToast } from "@/components/ui/use-toast";
+import { PrivacyPolicyDialog } from "@/components/privacy-policy-dialog";
 
 export default function DashboardLayout({
   children,
@@ -57,6 +58,12 @@ export default function DashboardLayout({
           {children}
         </div>
       </main>
+      <footer className="py-6 text-center border-t">
+        <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+          <span>© {new Date().getFullYear()} Subtrackt</span>
+          <PrivacyPolicyDialog />
+        </div>
+      </footer>
     </div>
   );
 } 

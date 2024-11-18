@@ -1,7 +1,22 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Wallet, CreditCard, Bell, ArrowRight } from "lucide-react";
 import Image from 'next/image';
+import { PrivacyPolicyDialog } from "@/components/privacy-policy-dialog";
+
+// Create a client-side only footer component
+function Footer() {
+  return (
+    <footer className="mt-auto py-6 text-center border-t">
+      <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground">
+        <span>© {new Date().getFullYear()} Subtrackt</span>
+        <PrivacyPolicyDialog />
+      </div>
+    </footer>
+  );
+}
 
 export default function Home() {
   return (
@@ -79,6 +94,9 @@ export default function Home() {
           <ServiceLogo src="/logos/midjourney.png" name="Midjourney" />
         </div>
       </div>
+
+      {/* Replace the existing footer with the new component */}
+      <Footer />
     </main>
   );
 }

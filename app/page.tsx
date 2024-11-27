@@ -20,35 +20,37 @@ function Footer() {
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <Image
-          src="/subtrackt.png"
-          alt="Subtrack Logo"
-          width={180}
-          height={37}
-          priority
-        />
-        <div className="flex flex-col items-center w-full max-w-5xl gap-6 md:gap-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-center">
-            Track Your Subscriptions<br />
-            Avoid those surprise charges
-          </h1>
+    <main className="flex min-h-screen flex-col items-center p-4 md:p-8 lg:p-24 gap-8 md:gap-12">
+      {/* Logo and Header Section */}
+      <div className="flex flex-col items-center w-full max-w-5xl gap-6 md:gap-8">
+        <div className="w-full max-w-[900px] h-[150px] md:h-[200px] lg:h-[300px] relative">
+          <Image
+            src="/subtrackt.png"
+            alt="Subtrackt Logo"
+            fill
+            style={{ objectFit: 'contain' }}
+            priority
+          />
+        </div>
+        
+        <h1 className="text-3xl md:text-4xl font-bold text-center">
+          Track Your Subscriptions<br />
+          Avoid those surprise charges
+        </h1>
 
-          <p className="text-lg md:text-xl text-muted-foreground text-center max-w-2xl px-4">
-            Keep track of all your subscriptions in one place. Get reminders before renewals and stay on top of your recurring payments.
-          </p>
+        <p className="text-lg md:text-xl text-muted-foreground text-center max-w-2xl px-4">
+          Keep track of all your subscriptions in one place. Get reminders before renewals and stay on top of your recurring payments.
+        </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center w-full px-4 sm:px-0">
-            <Button asChild size="lg" className="w-full sm:w-auto">
-              <Link href="/auth/register">
-                Get Started <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-              <Link href="/auth/login">Sign In</Link>
-            </Button>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center w-full px-4 sm:px-0">
+          <Button asChild size="lg" className="w-full sm:w-auto">
+            <Link href="/auth/register">
+              Get Started <ArrowRight className="ml-2 h-5 w-5" />
+            </Link>
+          </Button>
+          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+            <Link href="/auth/login">Sign In</Link>
+          </Button>
         </div>
       </div>
 

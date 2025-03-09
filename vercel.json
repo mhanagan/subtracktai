@@ -3,6 +3,10 @@
     {
       "path": "/api/check-renewals/?cronSecret=1972150912542",
       "schedule": "0 18 * * *"
+    },
+    {
+      "path": "/api/update-renewals/?cronSecret=1972150912542",
+      "schedule": "5 18 * * *"
     }
   ],
   "trailingSlash": true
